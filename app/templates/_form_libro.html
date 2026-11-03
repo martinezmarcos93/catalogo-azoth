@@ -7,7 +7,7 @@
   <label>País<input name="pais" value="{{ libro.pais if libro else 'Argentina' }}"></label>
   <label>Tapa
     <select name="tapa">
-      {% for t in ["Tapa blanda","Tapa dura","Tapa dura entelada","Tapa blanda con solapas"] %}
+      {% for t in TAPAS %}
       <option {{ 'selected' if libro and libro.tapa==t }}>{{ t }}</option>
       {% endfor %}
     </select>

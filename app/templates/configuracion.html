@@ -18,12 +18,37 @@
     <form class="panel frame" method="post" action="{{ url_for('rutas.actualizar_sitio') }}">
       <h2><i data-lucide="store"></i>Datos del local</h2><hr class="sep">
       <div class="form">
-        <label class="full">Usuario de Instagram (sin @)<input name="instagram_usuario" value="{{ config.instagram_usuario }}" placeholder="azothlibreria"></label>
         <label class="full">WhatsApp (solo números, con código de país)<input name="whatsapp_numero" value="{{ config.whatsapp_numero }}" placeholder="5491122334455"></label>
         <label class="full">Dirección<input name="direccion" value="{{ config.direccion }}"></label>
         <label class="full">Horario<input name="horario_texto" value="{{ config.horario_texto }}"></label>
       </div>
       <div class="end" style="justify-content:flex-start;margin-top:var(--sp-4)"><button class="btn" type="submit">Guardar datos</button></div>
+    </form>
+  </div>
+
+  <div class="panel frame" style="margin-top:var(--sp-4)">
+    <h2><i data-lucide="instagram"></i>Cuentas de Instagram</h2><hr class="sep">
+    <p class="t-sub">Podés tener más de una (por ejemplo, una para la librería y otra para tatuajes). La primera de la lista es la que se usa para las consultas de libros desde la Vitrina.</p>
+
+    <ul class="list">
+      {% for cuenta in config.instagram_cuentas %}
+      <li>
+        <span class="grow"><span class="li-t">{{ cuenta.etiqueta }}</span><span class="li-m"><span>@{{ cuenta.usuario }}</span></span></span>
+        <form method="post" action="{{ url_for('rutas.eliminar_instagram', cuenta_id=cuenta.id) }}" onsubmit="return confirm('¿Eliminar esta cuenta de Instagram?')">
+          <button class="btn ghost sm" type="submit" aria-label="Eliminar"><i data-lucide="trash-2"></i></button>
+        </form>
+      </li>
+      {% else %}
+      <li class="empty">Todavía no cargaste ninguna cuenta.</li>
+      {% endfor %}
+    </ul>
+
+    <form method="post" action="{{ url_for('rutas.agregar_instagram') }}" style="margin-top:var(--sp-4)">
+      <div class="form">
+        <label>Etiqueta<input name="etiqueta" placeholder="Librería" required></label>
+        <label>Usuario (sin @)<input name="usuario" placeholder="azothlibreria" required></label>
+      </div>
+      <div class="end" style="justify-content:flex-start;margin-top:var(--sp-4)"><button class="btn ghost" type="submit"><i data-lucide="plus"></i>Agregar cuenta</button></div>
     </form>
   </div>
 </section>

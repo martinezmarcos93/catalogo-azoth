@@ -7,7 +7,8 @@
     <div><span class="kicker">Folio II</span><h1>Catálogo</h1><p>Ejemplares, ediciones y estado. De acá sale el texto de cada post.</p></div>
     <div class="actions">
       <button class="btn" type="button" onclick="document.getElementById('dlg-crear').showModal()"><i data-lucide="book-plus"></i>Cargar libro</button>
-      <a class="btn ghost" href="{{ url_for('rutas.catalogo_csv') }}"><i data-lucide="sheet"></i>Descargar planilla</a>
+      <a class="btn ghost" href="{{ url_for('rutas.importar_catalogo') }}"><i data-lucide="upload"></i>Importar planilla</a>
+      <a class="btn ghost" href="{{ url_for('rutas.catalogo_csv') }}"><i data-lucide="sheet"></i>Descargar catálogo (.csv)</a>
     </div>
   </div>
 

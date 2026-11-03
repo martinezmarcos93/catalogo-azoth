@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block titulo %}Importar catálogo{% endblock %}
+{% block content %}
+<section>
+  <div class="head"><div><span class="kicker">Catálogo</span><h1>Importar desde planilla</h1><p>Cargá muchos libros de una sola vez, en vez de uno por uno.</p></div></div>
+
+  <div class="cols">
+    <div class="panel frame">
+      <h2><i data-lucide="download"></i>1. Descargá la planilla</h2><hr class="sep">
+      <p class="t-sub">Tiene una fila de encabezado y dos filas de ejemplo (que después hay que borrar).
+      Las columnas Tapa, Tema, Tipo, Estado e Ilustrado tienen una lista desplegable: así no se puede
+      escribir algo que el sistema no reconozca.</p>
+      <div class="end" style="justify-content:flex-start;margin-top:var(--sp-4)">
+        <a class="btn ghost" href="{{ url_for('static', filename='plantillas/azoth-catalogo-plantilla.xlsx') }}"><i data-lucide="file-spreadsheet"></i>Descargar plantilla (.xlsx)</a>
+      </div>
+    </div>
+
+    <div class="panel frame">
+      <h2><i data-lucide="upload"></i>2. Completala y subila de nuevo</h2><hr class="sep">
+      <p class="t-sub">Completá un libro por fila, borrá las dos filas de ejemplo, guardá el archivo y subilo acá.
+      Cada fila con título se agrega como un libro nuevo — no reemplaza el catálogo que ya tenés cargado.</p>
+      <form method="post" enctype="multipart/form-data">
+        <div class="form">
+          <label class="full">Archivo (.xlsx)<input type="file" name="archivo" accept=".xlsx,.xlsm" required></label>
+        </div>
+        <div class="end" style="justify-content:flex-start;margin-top:var(--sp-4)">
+          <button class="btn" type="submit"><i data-lucide="upload"></i>Importar catálogo</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</section>
+{% endblock %}

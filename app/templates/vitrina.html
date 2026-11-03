@@ -5,9 +5,10 @@
 <section>
   <div class="head"><div><span class="kicker">Folio III</span><h1>Vitrina online</h1><p>Lo que ve el cliente desde el link de la bio: lo disponible, con precio.</p></div></div>
 
+  {% set cuenta_libreria = sitio.instagram_cuentas[0] if sitio.instagram_cuentas else None %}
   <div class="vit-head frame">
     <img src="{{ url_for('static', filename='img/logo-azoth.png') }}" alt="Azoth">
-    <div><span class="t">AZOTH</span><br><span class="s">@{{ sitio.instagram_usuario }}</span></div>
+    <div><span class="t">AZOTH</span><br><span class="s">{% if cuenta_libreria %}@{{ cuenta_libreria.usuario }}{% else %}Sin Instagram configurado{% endif %}</span></div>
   </div>
 
   <form class="toolbar" method="get">
@@ -50,7 +51,9 @@
           <dt>Precio</dt><dd class="num"><b>{{ precio_o_consultar(b) }}</b></dd>
         </dl>
         <div class="actions">
-          <a class="btn" href="https://ig.me/m/{{ sitio.instagram_usuario }}" target="_blank" rel="noopener"><i data-lucide="message-circle"></i>Consultar por Instagram</a>
+          {% if cuenta_libreria %}
+          <a class="btn" href="https://ig.me/m/{{ cuenta_libreria.usuario }}" target="_blank" rel="noopener"><i data-lucide="message-circle"></i>Consultar por Instagram</a>
+          {% endif %}
           <button class="btn ghost" type="button" data-copy="{{ mensaje }}" onclick="copiarAlPortapapeles(this)"><i data-lucide="copy"></i>Copiar mensaje</button>
         </div>
         <div class="t-sub">Envíos a todo el país · retiro en {{ sitio.direccion }}, {{ sitio.horario_texto }}.</div>

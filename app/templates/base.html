@@ -41,11 +41,11 @@
       <a href="{{ url_for('rutas.configuracion') }}" {% if request.endpoint=='rutas.configuracion' %}aria-current="page"{% endif %}><i data-lucide="settings"></i>Configuración</a>
     </nav>
 
-    {% if sitio.instagram_usuario or sitio.whatsapp_numero %}
+    {% if sitio.instagram_cuentas or sitio.whatsapp_numero %}
     <div class="social">
-      {% if sitio.instagram_usuario %}
-      <a href="https://instagram.com/{{ sitio.instagram_usuario }}" target="_blank" rel="noopener" title="Instagram de Azoth"><i data-lucide="instagram"></i></a>
-      {% endif %}
+      {% for cuenta in sitio.instagram_cuentas %}
+      <a href="https://instagram.com/{{ cuenta.usuario }}" target="_blank" rel="noopener" title="Instagram · {{ cuenta.etiqueta }} (@{{ cuenta.usuario }})"><i data-lucide="instagram"></i></a>
+      {% endfor %}
       {% if sitio.whatsapp_numero %}
       <a href="https://wa.me/{{ sitio.whatsapp_numero }}" target="_blank" rel="noopener" title="WhatsApp"><i data-lucide="message-circle"></i></a>
       {% endif %}

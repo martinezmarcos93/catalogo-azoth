@@ -6,7 +6,7 @@ from flask import Flask
 from . import basedatos as db
 from . import rutas, auth
 from .utilidades import (
-    ficha, ficha_turno, fecha_corta, glifo, tono, estado_local,
+    TAPAS, ficha, ficha_turno, fecha_corta, glifo, tono, estado_local,
     texto_post_instagram, mensaje_consulta_instagram, money, precio_o_consultar,
 )
 
@@ -42,6 +42,7 @@ def create_app(config_extra=None):
     app.jinja_env.filters["money"] = money
     app.jinja_env.filters["fecha_corta"] = fecha_corta
     app.jinja_env.globals.update(
+        TAPAS=TAPAS,
         ficha=ficha,
         ficha_turno=ficha_turno,
         glifo=glifo,

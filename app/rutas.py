@@ -4,13 +4,14 @@ import time
 from datetime import timedelta
 
 from flask import Blueprint, Response, flash, redirect, render_template, request, url_for
+from openpyxl import load_workbook
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from . import basedatos as db
 from .auth import verificar_sesion
 from .utilidades import (
     DIAS, ENTREGAS, ESTADOS, MEDIOS_PAGO, MESES, TEMAS, TIPOS,
-    hoy_argentina, money,
+    fila_planilla_a_libro, hoy_argentina, money,
 )
 
 bp = Blueprint("rutas", __name__)
@@ -159,6 +160,51 @@ def catalogo_csv():
         mimetype="text/csv",
         headers={"Content-Disposition": "attachment; filename=azoth-catalogo.csv"},
     )
+
+
+@bp.route("/catalogo/importar", methods=["GET", "POST"])
+def importar_catalogo():
+    if request.method == "GET":
+        return render_template("importar.html")
+
+    archivo = request.files.get("archivo")
+    if not archivo or not archivo.filename:
+        flash("Elegí el archivo de la planilla.")
+        return redirect(url_for("rutas.importar_catalogo"))
+    if not archivo.filename.lower().endswith((".xlsx", ".xlsm")):
+        flash("Tiene que ser un archivo .xlsx (la planilla de ejemplo ya viene en ese formato).")
+        return redirect(url_for("rutas.importar_catalogo"))
+
+    try:
+        libro_excel = load_workbook(archivo, data_only=True, read_only=True)
+    except Exception:
+        flash("No se pudo abrir ese archivo. ¿Es un .xlsx válido?")
+        return redirect(url_for("rutas.importar_catalogo"))
+
+    hoja = libro_excel["Catálogo"] if "Catálogo" in libro_excel.sheetnames else libro_excel.worksheets[0]
+
+    fila_encabezado = None
+    for fila in hoja.iter_rows(min_row=1, max_row=10):
+        if fila and str(fila[0].value or "").strip().lower() == "título":
+            fila_encabezado = fila[0].row
+            break
+    if fila_encabezado is None:
+        fila_encabezado = 1
+
+    importados = 0
+    for i, fila in enumerate(hoja.iter_rows(min_row=fila_encabezado + 1, values_only=True)):
+        datos = fila_planilla_a_libro(fila)
+        if datos is None:
+            continue
+        datos["id"] = f"l{int(time.time() * 1000)}{i}"
+        db.crear_libro(datos)
+        importados += 1
+
+    if importados:
+        flash(f"Se importaron {importados} libros al catálogo.")
+    else:
+        flash("No se encontró ningún libro con título en esa planilla.")
+    return redirect(url_for("rutas.catalogo"))
 
 
 # ---------- VITRINA ----------
@@ -372,7 +418,26 @@ def actualizar_clave():
 
 @bp.route("/configuracion/sitio", methods=["POST"])
 def actualizar_sitio():
-    for clave in ("instagram_usuario", "whatsapp_numero", "direccion", "horario_texto"):
+    for clave in ("whatsapp_numero", "direccion", "horario_texto"):
         db.actualizar_configuracion(clave, request.form.get(clave, "").strip())
     flash("Datos del local actualizados.")
+    return redirect(url_for("rutas.configuracion"))
+
+
+@bp.route("/configuracion/instagram/agregar", methods=["POST"])
+def agregar_instagram():
+    etiqueta = request.form.get("etiqueta", "").strip()
+    usuario = request.form.get("usuario", "").strip().lstrip("@")
+    if not (etiqueta and usuario):
+        flash("Faltan datos de la cuenta de Instagram.")
+    else:
+        db.agregar_instagram_cuenta(etiqueta, usuario)
+        flash("Cuenta de Instagram agregada.")
+    return redirect(url_for("rutas.configuracion"))
+
+
+@bp.route("/configuracion/instagram/<int:cuenta_id>/eliminar", methods=["POST"])
+def eliminar_instagram(cuenta_id):
+    db.eliminar_instagram_cuenta(cuenta_id)
+    flash("Cuenta de Instagram eliminada.")
     return redirect(url_for("rutas.configuracion"))

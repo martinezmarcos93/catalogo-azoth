@@ -1,3 +1,4 @@
+import json
 import sqlite3
 from pathlib import Path
 
@@ -99,7 +100,6 @@ def actualizar_configuracion(clave, valor):
 
 
 _CONFIG_SITIO_DEFAULTS = {
-    "instagram_usuario": "azothlibreria",
     "whatsapp_numero": "",
     "direccion": "Bolívar 1447, San Telmo",
     "horario_texto": "14 a 19 h · martes y domingo cerrado",
@@ -108,7 +108,37 @@ _CONFIG_SITIO_DEFAULTS = {
 
 def obtener_config_sitio():
     guardado = listar_configuracion()
-    return {clave: guardado.get(clave, valor) or valor for clave, valor in _CONFIG_SITIO_DEFAULTS.items()}
+    config = {clave: guardado.get(clave, valor) or valor for clave, valor in _CONFIG_SITIO_DEFAULTS.items()}
+    config["instagram_cuentas"] = listar_instagram_cuentas()
+    return config
+
+
+# ---------- cuentas de Instagram (pueden ser varias: librería, tatuajes, etc.) ----------
+
+def listar_instagram_cuentas():
+    crudo = obtener_configuracion("instagram_cuentas", "")
+    if not crudo:
+        return []
+    try:
+        return json.loads(crudo)
+    except (json.JSONDecodeError, TypeError):
+        return []
+
+
+def _guardar_instagram_cuentas(cuentas):
+    actualizar_configuracion("instagram_cuentas", json.dumps(cuentas, ensure_ascii=False))
+
+
+def agregar_instagram_cuenta(etiqueta, usuario):
+    cuentas = listar_instagram_cuentas()
+    siguiente_id = max((c["id"] for c in cuentas), default=0) + 1
+    cuentas.append({"id": siguiente_id, "etiqueta": etiqueta, "usuario": usuario})
+    _guardar_instagram_cuentas(cuentas)
+
+
+def eliminar_instagram_cuenta(cuenta_id):
+    cuentas = [c for c in listar_instagram_cuentas() if c["id"] != cuenta_id]
+    _guardar_instagram_cuentas(cuentas)
 
 
 # ---------- libros ----------

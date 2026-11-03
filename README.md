@@ -51,10 +51,30 @@ celular no carga la página aunque esté en el mismo WiFi:
 ## Datos
 
 Todo vive en `instance/azoth.db` (SQLite, no se sube al repositorio). Para
-hacer backup alcanza con copiar ese archivo. La base arranca vacía: los
-libros se cargan desde **Catálogo → Cargar libro**, uno por uno, o se puede
-pedir que se arme un importador desde el Excel del catálogo de Silvio
-cuando esté listo (no implementado todavía).
+hacer backup alcanza con copiar ese archivo. La base arranca vacía.
+
+### Cargar el catálogo por lote (planilla Excel)
+
+Desde **Catálogo → Importar planilla**:
+
+1. Descargar la plantilla (`.xlsx`, con listas desplegables para Tapa,
+   Tema, Tipo, Estado e Ilustrado, para que no se pueda escribir un valor
+   que el sistema no reconozca).
+2. Completar un libro por fila y borrar las 2 filas de ejemplo.
+3. Subir el archivo: cada fila con título se agrega como libro nuevo
+   (no reemplaza lo que ya estaba cargado, así que importar la misma
+   planilla dos veces duplica los libros).
+
+Si cambian las columnas (`TEMAS`, `TIPOS`, `ESTADOS`, `TAPAS` en
+`app/utilidades.py`), hay que volver a generar la plantilla con
+`python scripts/generar_plantilla_catalogo.py`.
+
+## Redes sociales
+
+Desde **Configuración** se puede cargar más de una cuenta de Instagram
+(por ejemplo, una para la librería y otra para tatuajes), cada una con su
+etiqueta. La primera de la lista es la que usan la Vitrina y el botón
+"Consultar por Instagram" de cada libro.
 
 ## Qué significa "contraseña configurable"
 
@@ -97,13 +117,15 @@ app/
     css/               el sistema de diseño (7 archivos: tokens, tipografía, superficies, navegación, controles, datos, ornamentación)
     img/logo-azoth.png
     icons/             íconos de la PWA, generados a partir del logo
+    plantillas/        azoth-catalogo-plantilla.xlsx, para la carga por lote
     manifest.json, sw.js
+scripts/
+  generar_plantilla_catalogo.py   regenera la plantilla de Excel si cambian las columnas
 instance/              azoth.db (no versionado) + clave secreta de sesión (no versionada)
 legado/                 el artefacto HTML de un solo archivo de la versión anterior, como referencia
 ```
 
 ## Próximos pasos posibles
 
-- Importador del catálogo real desde Excel (`xlsx` + `openpyxl`/`pandas`).
 - Cloudflare Tunnel si se necesita acceso fuera del WiFi del local.
 - Hacer configurable el horario que usa el cálculo de "abierto ahora".

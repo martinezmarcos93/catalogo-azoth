@@ -14,6 +14,7 @@ ESTADOS = [
     "Con algunos detalles (ver nota)",
     "Original firmado",
 ]
+TAPAS = ["Tapa blanda", "Tapa dura", "Tapa dura entelada", "Tapa blanda con solapas"]
 MEDIOS_PAGO = ["Transferencia", "Efectivo", "Mercado Pago"]
 ENTREGAS = ["En el local", "Envío"]
 
@@ -135,6 +136,46 @@ def texto_post_instagram(libro):
     else:
         lineas.append("Precio a consultar por privado.")
     return "\n".join(lineas)
+
+
+def _entero_o_none(valor):
+    if valor in (None, ""):
+        return None
+    try:
+        return int(float(valor))
+    except (TypeError, ValueError):
+        return None
+
+
+def fila_planilla_a_libro(valores):
+    """Convierte una fila de la planilla de importación (13 columnas, en el
+    orden de scripts/generar_plantilla_catalogo.py) en un dict listo para
+    basedatos.crear_libro. Devuelve None si no hay título (fila vacía)."""
+    columnas = (list(valores) + [None] * 13)[:13]
+    (titulo, autor, editorial, anio, pais, tapa, paginas, tema, tipo,
+     estado, precio, ilustrado, nota) = columnas
+
+    titulo = str(titulo).strip() if titulo else ""
+    if not titulo:
+        return None
+
+    ilustrado_texto = str(ilustrado or "").strip().lower()
+
+    return {
+        "titulo": titulo,
+        "autor": str(autor or "").strip(),
+        "editorial": str(editorial or "").strip(),
+        "anio": _entero_o_none(anio),
+        "pais": str(pais or "Argentina").strip() or "Argentina",
+        "tapa": str(tapa or "").strip() or TAPAS[0],
+        "paginas": _entero_o_none(paginas),
+        "tema": str(tema or "").strip() or TEMAS[0],
+        "tipo": str(tipo or "").strip() or TIPOS[0],
+        "estado": str(estado or "").strip() or ESTADOS[0],
+        "precio": max(0, _entero_o_none(precio) or 0),
+        "ilustrado": 1 if ilustrado_texto in ("sí", "si", "true", "1") else 0,
+        "nota": str(nota or "").strip(),
+    }
 
 
 def mensaje_consulta_instagram(libro):
