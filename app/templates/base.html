@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>{% block titulo %}Azoth{% endblock %} · Sistema de gestión</title>
+
+<link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+<meta name="theme-color" content="#101114">
+<link rel="icon" href="{{ url_for('static', filename='icons/icon-192.png') }}">
+<link rel="apple-touch-icon" href="{{ url_for('static', filename='icons/icon-192.png') }}">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Azoth">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+
+{% for hoja in ["design-tokens","typography","surfaces","navigation","controls","data-display","ornamentation"] %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/' ~ hoja ~ '.css') }}">
+{% endfor %}
+{% block estilos_extra %}{% endblock %}
+</head>
+<body>
+<div class="app">
+  <aside class="side">
+    <div class="brand">
+      <img src="{{ url_for('static', filename='img/logo-azoth.png') }}" alt="Azoth">
+      <small>Libros esotéricos, descatalogados, rarezas y antigüedades</small>
+    </div>
+
+    <nav aria-label="Secciones">
+      <a href="{{ url_for('rutas.panel') }}" {% if request.endpoint=='rutas.panel' %}aria-current="page"{% endif %}><i data-lucide="house"></i>Panel</a>
+      <a href="{{ url_for('rutas.catalogo') }}" {% if request.endpoint=='rutas.catalogo' %}aria-current="page"{% endif %}><i data-lucide="book-open-text"></i>Catálogo</a>
+      <a href="{{ url_for('rutas.vitrina') }}" {% if request.endpoint=='rutas.vitrina' %}aria-current="page"{% endif %}><i data-lucide="store"></i>Vitrina online</a>
+      <a href="{{ url_for('rutas.ventas') }}" {% if request.endpoint=='rutas.ventas' %}aria-current="page"{% endif %}><i data-lucide="shopping-basket"></i>Ventas</a>
+      <a href="{{ url_for('rutas.turnos') }}" {% if request.endpoint=='rutas.turnos' %}aria-current="page"{% endif %}><i data-lucide="pen-tool"></i>Turnos de tatuaje</a>
+      <hr class="nav-sep">
+      <a href="{{ url_for('rutas.calculadora') }}" {% if request.endpoint=='rutas.calculadora' %}aria-current="page"{% endif %}><i data-lucide="calculator"></i>Calculadora de costos</a>
+      <a href="{{ url_for('rutas.configuracion') }}" {% if request.endpoint=='rutas.configuracion' %}aria-current="page"{% endif %}><i data-lucide="settings"></i>Configuración</a>
+    </nav>
+
+    {% if sitio.instagram_usuario or sitio.whatsapp_numero %}
+    <div class="social">
+      {% if sitio.instagram_usuario %}
+      <a href="https://instagram.com/{{ sitio.instagram_usuario }}" target="_blank" rel="noopener" title="Instagram de Azoth"><i data-lucide="instagram"></i></a>
+      {% endif %}
+      {% if sitio.whatsapp_numero %}
+      <a href="https://wa.me/{{ sitio.whatsapp_numero }}" target="_blank" rel="noopener" title="WhatsApp"><i data-lucide="message-circle"></i></a>
+      {% endif %}
+    </div>
+    {% endif %}
+
+    <div class="hours">
+      <div><span class="dot{{ ' on' if estado_local.abierto else '' }}"></span><span>{{ estado_local.texto }}</span></div>
+      <div><i data-lucide="map-pin"></i><span>{{ sitio.direccion }}</span></div>
+      <div><i data-lucide="clock"></i><span>{{ sitio.horario_texto }}</span></div>
+    </div>
+  </aside>
+
+  <div>
+    <header class="top">
+      <div class="crumb">Azoth <span>· Sistema de gestión</span></div>
+      <div class="who">
+        <span>{{ session.get('nombre', 'Silvio') }}</span>
+        <div class="avatar">{{ session.get('nombre', 'S')[0] | upper }}</div>
+        <form method="post" action="{{ url_for('auth.logout') }}">
+          <button class="btn ghost sm" type="submit" title="Cerrar sesión"><i data-lucide="log-out"></i></button>
+        </form>
+      </div>
+    </header>
+    <main id="main">
+      {% block content %}{% endblock %}
+      <p class="colofon">Solve et coagula</p>
+    </main>
+  </div>
+</div>
+
+{% with mensajes = get_flashed_messages() %}
+  {% if mensajes %}
+  <div class="toast" role="status" aria-live="polite">{{ mensajes[0] }}</div>
+  {% endif %}
+{% endwith %}
+
+<script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+<script>
+  if (window.lucide) lucide.createIcons();
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register("{{ url_for('static', filename='sw.js') }}").catch(function(){});
+  }
+  var toast = document.querySelector('.toast');
+  if (toast) setTimeout(function(){ toast.remove(); }, 4000);
+
+  function copiarAlPortapapeles(boton){
+    var texto = boton.getAttribute('data-copy');
+    var original = boton.textContent;
+    navigator.clipboard.writeText(texto).then(function(){
+      boton.textContent = 'Copiado';
+      setTimeout(function(){ boton.textContent = original; }, 1500);
+    }, function(){
+      boton.textContent = 'No se pudo copiar';
+    });
+  }
+</script>
+{% block script_extra %}{% endblock %}
+</body>
+</html>

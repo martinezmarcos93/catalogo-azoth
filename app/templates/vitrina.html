@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% import "_macros.html" as m %}
+{% block titulo %}Vitrina online{% endblock %}
+{% block content %}
+<section>
+  <div class="head"><div><span class="kicker">Folio III</span><h1>Vitrina online</h1><p>Lo que ve el cliente desde el link de la bio: lo disponible, con precio.</p></div></div>
+
+  <div class="vit-head frame">
+    <img src="{{ url_for('static', filename='img/logo-azoth.png') }}" alt="Azoth">
+    <div><span class="t">AZOTH</span><br><span class="s">@{{ sitio.instagram_usuario }}</span></div>
+  </div>
+
+  <form class="toolbar" method="get">
+    <label class="search" for="vq"><i data-lucide="search"></i><input type="search" id="vq" name="q" value="{{ q }}" placeholder="Buscar un libro"></label>
+    <select name="tema" aria-label="Tema" onchange="this.form.submit()">
+      <option value="">Todos los temas</option>
+      {% for t in TEMAS %}<option value="{{ t }}" {{ 'selected' if t==tema }}>{{ t }}</option>{% endfor %}
+    </select>
+    <button class="btn ghost sm" type="submit">Buscar</button>
+    <span class="count num">{{ libros | length }} disponibles</span>
+  </form>
+
+  <div class="shelf">
+    {% for b in libros %}
+    <button type="button" class="book" onclick="document.getElementById('dlg-ver-{{ b.id }}').showModal()">
+      {{ m.cover(b) }}
+      <span class="bt">{{ b.titulo }}</span>
+      <span class="ba">{{ b.autor or "Anónimo" }} · {{ b.editorial }}, {{ b.anio or '' }}</span>
+      <span class="rowx"><span class="bp num">{{ precio_o_consultar(b) }}</span>{% if b.tipo not in ("Usado","Nuevo") %}{{ m.tipo_chip(b) }}{% endif %}</span>
+    </button>
+    {% endfor %}
+  </div>
+</section>
+
+{% for b in libros %}
+{% set mensaje = mensaje_consulta_instagram(b) %}
+<dialog id="dlg-ver-{{ b.id }}">
+  <div class="dlg">
+    <div class="detail">
+      {{ m.cover(b) }}
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div class="t-title">{{ b.titulo }}</div>
+        <div class="t-sub">{{ b.autor or "Anónimo" }}</div>
+        <dl class="kv">
+          <dt>Ficha</dt><dd class="num">{{ ficha(b.nro) }}</dd>
+          <dt>Edición</dt><dd>{{ b.editorial }}, {{ b.anio or '' }}, {{ b.pais }}</dd>
+          {% if b.tapa %}<dt>Formato</dt><dd>{{ b.tapa }}{% if b.paginas %}, {{ b.paginas }} páginas{% endif %}{% if b.ilustrado %}, ilustrado{% endif %}</dd>{% endif %}
+          <dt>Estado</dt><dd>{{ b.estado }}</dd>
+          {% if b.nota %}<dt>Detalle</dt><dd>{{ b.nota }}</dd>{% endif %}
+          <dt>Precio</dt><dd class="num"><b>{{ precio_o_consultar(b) }}</b></dd>
+        </dl>
+        <div class="actions">
+          <a class="btn" href="https://ig.me/m/{{ sitio.instagram_usuario }}" target="_blank" rel="noopener"><i data-lucide="message-circle"></i>Consultar por Instagram</a>
+          <button class="btn ghost" type="button" data-copy="{{ mensaje }}" onclick="copiarAlPortapapeles(this)"><i data-lucide="copy"></i>Copiar mensaje</button>
+        </div>
+        <div class="t-sub">Envíos a todo el país · retiro en {{ sitio.direccion }}, {{ sitio.horario_texto }}.</div>
+      </div>
+    </div>
+    <div class="end"><button class="btn ghost" type="button" onclick="this.closest('dialog').close()">Cerrar</button></div>
+  </div>
+</dialog>
+{% endfor %}
+{% endblock %}

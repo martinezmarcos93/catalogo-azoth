@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block titulo %}Ventas{% endblock %}
+{% block content %}
+<section>
+  <div class="head">
+    <div><span class="kicker">Folio IV</span><h1>Ventas</h1><p>Cada venta marca el libro como vendido y deja pendiente el aviso en el post.</p></div>
+    <div class="actions"><button class="btn" type="button" onclick="document.getElementById('dlg-venta').showModal()"><i data-lucide="plus"></i>Registrar venta</button></div>
+  </div>
+
+  <div class="tiles">
+    <div class="tile frame hero"><span class="ic"><i data-lucide="book-open"></i></span><div><div class="k">Este mes</div><div class="v num">{{ total_mes }}</div><div class="s">{{ cantidad_mes }} libros</div></div></div>
+    <div class="tile frame"><span class="ic"><i data-lucide="receipt"></i></span><div><div class="k">Ticket promedio</div><div class="v num">{{ ticket_promedio }}</div><div class="s">por libro</div></div></div>
+    <div class="tile frame"><span class="ic"><i data-lucide="truck"></i></span><div><div class="k">Con envío</div><div class="v num">{{ con_envio }} de {{ cantidad_mes }}</div><div class="s">el resto se retiró en el local</div></div></div>
+    <div class="tile frame"><span class="ic"><i data-lucide="calendar"></i></span><div><div class="k">Mes anterior</div><div class="v num">{{ total_mes_pasado }}</div><div class="s">total vendido</div></div></div>
+  </div>
+
+  <div class="cols" style="margin-bottom:18px">
+    <div class="panel frame">
+      <h2><i data-lucide="library"></i>Qué temas se venden</h2><hr class="sep">
+      <div class="bars">
+        {% for k, v in barras_tema %}
+        <div class="b"><span>{{ k }}</span><span class="track"><i style="width:{{ [4, (v/max_tema*100)|round(1)] | max }}%"></i></span><span class="num" style="text-align:right">{{ v | money }}</span></div>
+        {% else %}<p class="empty">Sin ventas todavía</p>{% endfor %}
+      </div>
+    </div>
+    <div class="panel frame">
+      <h2><i data-lucide="wallet"></i>Cómo pagan</h2><hr class="sep">
+      <div class="bars">
+        {% for k, v in barras_medio %}
+        <div class="b"><span>{{ k }}</span><span class="track"><i style="width:{{ [4, (v/max_medio*100)|round(1)] | max }}%"></i></span><span class="num" style="text-align:right">{{ v | money }}</span></div>
+        {% else %}<p class="empty">Sin ventas todavía</p>{% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <div class="frame tablebox"><div class="tablewrap"><table>
+    <thead><tr><th>Fecha</th><th>Libro</th><th>Medio de pago</th><th>Entrega</th><th class="r">Total</th><th></th></tr></thead>
+    <tbody>
+      {% for v, libro in filas %}
+      <tr>
+        <td class="num">{{ v.fecha | fecha_corta }}</td>
+        <td><span class="t-title" style="font-size:18px">{{ libro.titulo if libro else '(borrado)' }}</span><div class="t-sub">{{ libro.autor if libro else '' }}</div></td>
+        <td>{{ v.medio }}</td>
+        <td>{{ v.entrega }}</td>
+        <td class="r num">{{ v.precio | money }}</td>
+        <td class="r">
+          <form method="post" action="{{ url_for('rutas.eliminar_venta', venta_id=v.id) }}" onsubmit="return confirm('¿Eliminar esta venta? El libro queda como vendido igual.')">
+            <button class="btn ghost sm" type="submit" aria-label="Eliminar"><i data-lucide="trash-2"></i></button>
+          </form>
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="6" class="empty">Todavía no hay ventas registradas.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table></div></div>
+</section>
+
+<dialog id="dlg-venta">
+  <form class="dlg" method="post" action="{{ url_for('rutas.crear_venta') }}">
+    <h2>Registrar venta</h2>
+    <div class="form">
+      <label class="full">Libro
+        <select name="libro_id" onchange="document.getElementById('s-precio').value=this.selectedOptions[0].dataset.precio||''">
+          {% for b in disponibles %}
+          <option value="{{ b.id }}" data-precio="{{ b.precio }}">{{ b.titulo }}{% if b.autor %} — {{ b.autor }}{% endif %} ({{ precio_o_consultar(b) }})</option>
+          {% endfor %}
+        </select>
+      </label>
+      <label>Medio de pago
+        <select name="medio">{% for m in MEDIOS_PAGO %}<option>{{ m }}</option>{% endfor %}</select>
+      </label>
+      <label>Entrega
+        <select name="entrega">{% for e in ENTREGAS %}<option>{{ e }}</option>{% endfor %}</select>
+      </label>
+      <label class="full">Precio final ($)<input id="s-precio" name="precio" type="number" min="0" step="500" value="{{ disponibles[0].precio if disponibles else '' }}"></label>
+    </div>
+    <div class="end"><button class="btn ghost" type="button" onclick="this.closest('dialog').close()">Cancelar</button><button class="btn" type="submit">Registrar</button></div>
+  </form>
+</dialog>
+{% endblock %}

@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Azoth · Primer ingreso</title>
+<link rel="icon" href="{{ url_for('static', filename='icons/icon-192.png') }}">
+<meta name="theme-color" content="#101114">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+{% for hoja in ["design-tokens","typography","surfaces","controls"] %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/' ~ hoja ~ '.css') }}">
+{% endfor %}
+</head>
+<body>
+<div class="login-wrap">
+  <div class="login-card frame" style="width:min(420px,100%)">
+    <img src="{{ url_for('static', filename='img/logo-azoth.png') }}" alt="Azoth">
+    <div>
+      <h2 style="font-family:var(--font-serif);font-size:var(--fs-2xl)">Primer ingreso</h2>
+      <p class="t-sub">Este sistema todavía no tiene contraseña. Elegí una: de acá en más va a ser el único modo de entrar.</p>
+    </div>
+    <form method="post">
+      <label for="nombre">Tu nombre</label>
+      <input id="nombre" name="nombre" value="Silvio" required>
+      <label for="clave">Contraseña</label>
+      <input id="clave" name="clave" type="password" minlength="4" required autocomplete="new-password">
+      <label for="clave_repetida">Repetila</label>
+      <input id="clave_repetida" name="clave_repetida" type="password" minlength="4" required autocomplete="new-password">
+      {% if error %}<p class="field-error">{{ error }}</p>{% endif %}
+      <button class="btn" type="submit">Crear contraseña y entrar</button>
+    </form>
+  </div>
+</div>
+</body>
+</html>

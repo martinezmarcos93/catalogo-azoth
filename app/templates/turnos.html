@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% import "_macros.html" as m %}
+{% block titulo %}Turnos de tatuaje{% endblock %}
+{% block content %}
+<section>
+  <div class="head">
+    <div><span class="kicker">Folio V</span><h1>Turnos de tatuaje</h1><p>Sesiones, señas y saldos. Mañana o después del cierre.</p></div>
+    <div class="actions"><button class="btn" type="button" onclick="document.getElementById('dlg-turno').showModal()"><i data-lucide="calendar-plus"></i>Nuevo turno</button></div>
+  </div>
+
+  <div class="tiles">
+    <div class="tile frame hero"><span class="ic"><i data-lucide="hourglass"></i></span><div><div class="k">Turnos agendados</div><div class="v num">{{ futuros }}</div><div class="s">desde hoy</div></div></div>
+    <div class="tile frame"><span class="ic"><i data-lucide="hand-coins"></i></span><div><div class="k">Señas cobradas</div><div class="v num">{{ senas_cobradas }}</div><div class="s">de turnos futuros</div></div></div>
+    <div class="tile frame"><span class="ic"><i data-lucide="wallet"></i></span><div><div class="k">Saldo a cobrar</div><div class="v num">{{ saldo_a_cobrar }}</div><div class="s">al terminar cada sesión</div></div></div>
+    <div class="tile frame"><span class="ic"><i data-lucide="triangle-alert"></i></span><div><div class="k">Sin seña</div><div class="v num">{{ sin_sena }}</div><div class="s">conviene pedirla</div></div></div>
+  </div>
+
+  <div class="week">
+    {% for d in semana %}
+    <div class="day frame{{ ' closed' if d.cerrado }}{{ ' today' if d.es_hoy }}">
+      <h3>{{ d.dia }}<span class="dn">{{ d.dia_num }} {{ d.mes }}</span></h3>
+      {% for t in d.manana %}
+      <div class="slot"><b>{{ t.hora }} · {{ t.cliente }}</b>{{ t.diseno }}<br>{{ m.estado_chip(t) }}</div>
+      {% endfor %}
+      {% if d.cerrado %}<div class="t-sub">Librería cerrada</div>{% else %}<div class="slot shop">{{ sitio.horario_texto }} · librería</div>{% endif %}
+      {% for t in d.tarde %}
+      <div class="slot"><b>{{ t.hora }} · {{ t.cliente }}</b>{{ t.diseno }}<br>{{ m.estado_chip(t) }}</div>
+      {% endfor %}
+    </div>
+    {% endfor %}
+  </div>
+
+  <div class="frame tablebox" style="margin-top:18px"><div class="tablewrap"><table>
+    <thead><tr><th>Fecha</th><th>Cliente</th><th>Diseño y zona</th><th>Sesión</th><th class="r">Seña</th><th class="r">Total</th><th>Estado</th><th></th></tr></thead>
+    <tbody>
+      {% for t in turnos %}
+      <tr>
+        <td class="num">{{ t.fecha | fecha_corta }} · {{ t.hora }}<div class="t-sub">{{ ficha_turno(t.nro) }}</div></td>
+        <td>{{ t.cliente }}</td>
+        <td>{{ t.diseno }}</td>
+        <td>{{ t.sesion }}</td>
+        <td class="r num">{{ t.sena | money }}</td>
+        <td class="r num">{{ t.total | money }}</td>
+        <td>{{ m.estado_chip(t) }}</td>
+        <td style="white-space:nowrap">
+          <button class="btn ghost sm" type="button" onclick="document.getElementById('dlg-editar-turno-{{ t.id }}').showModal()" aria-label="Editar"><i data-lucide="pencil"></i></button>
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="8" class="empty">Todavía no hay turnos agendados.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table></div></div>
+</section>
+
+<dialog id="dlg-turno">
+  <form class="dlg" method="post" action="{{ url_for('rutas.crear_turno') }}">
+    <h2>Nuevo turno</h2>
+    <div class="form">
+      <label>Día<input name="fecha" type="date" value="{{ manana }}" required></label>
+      <label>Hora<input name="hora" type="time" value="11:00" required></label>
+      <label>Cliente<input name="cliente" required></label>
+      <label>Sesión<input name="sesion" value="1 de 1"></label>
+      <label class="full">Diseño y zona<input name="diseno" placeholder="Ej.: uróboros, antebrazo" required></label>
+      <label>Precio total ($)<input name="total" type="number" min="0" step="1000" required></label>
+      <label>Seña ($)<input name="sena" type="number" min="0" step="1000" value="0"></label>
+    </div>
+    <div class="end"><button class="btn ghost" type="button" onclick="this.closest('dialog').close()">Cancelar</button><button class="btn" type="submit">Agendar</button></div>
+  </form>
+</dialog>
+
+{% for t in turnos %}
+<dialog id="dlg-editar-turno-{{ t.id }}">
+  <form class="dlg" method="post" action="{{ url_for('rutas.actualizar_turno', turno_id=t.id) }}">
+    <h2>Editar turno · {{ ficha_turno(t.nro) }}</h2>
+    <div class="form">
+      <label>Día<input name="fecha" type="date" value="{{ t.fecha }}" required></label>
+      <label>Hora<input name="hora" type="time" value="{{ t.hora }}" required></label>
+      <label>Cliente<input name="cliente" value="{{ t.cliente }}" required></label>
+      <label>Sesión<input name="sesion" value="{{ t.sesion }}"></label>
+      <label class="full">Diseño y zona<input name="diseno" value="{{ t.diseno }}" required></label>
+      <label>Precio total ($)<input name="total" type="number" min="0" step="1000" value="{{ t.total }}" required></label>
+      <label>Seña ($)<input name="sena" type="number" min="0" step="1000" value="{{ t.sena }}"></label>
+      <label class="full">Estado
+        <select name="estado">
+          {% for e in ["Confirmado","Falta seña","Cobrado"] %}<option {{ 'selected' if t.estado==e }}>{{ e }}</option>{% endfor %}
+        </select>
+      </label>
+    </div>
+    <div class="end"><button class="btn ghost" type="button" onclick="this.closest('dialog').close()">Cancelar</button>
+      <button class="btn danger" type="submit" formaction="{{ url_for('rutas.eliminar_turno', turno_id=t.id) }}" onclick="return confirm('¿Eliminar este turno?')">Eliminar</button>
+      <button class="btn" type="submit">Guardar</button></div>
+  </form>
+</dialog>
+{% endfor %}
+{% endblock %}

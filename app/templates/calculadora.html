@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block titulo %}Calculadora de costos{% endblock %}
+{% block content %}
+<section>
+  <div class="head"><div><span class="kicker">Folio VI</span><h1>Calculadora de costos</h1><p>Cuánto te costó y cuánta ganancia querés sacar: el precio de venta lo calcula sola.</p></div></div>
+
+  <div class="calc-grid">
+    <form class="panel frame" method="get">
+      <h2><i data-lucide="calculator"></i>Datos</h2><hr class="sep">
+      <div class="form">
+        <label class="full">¿Cuánto te costó? ($)<input name="costo" type="number" min="0" step="100" value="{{ costo }}" required autofocus></label>
+        <label class="full">¿Cuánta ganancia querés sacar? (%)<input name="margen" type="number" min="0" max="95" step="1" value="{{ margen }}" required></label>
+      </div>
+      <div class="end" style="justify-content:flex-start;margin-top:var(--sp-4)"><button class="btn" type="submit">Calcular</button></div>
+      <p class="t-sub" style="margin-top:var(--sp-4)">Sirve igual para un libro (costo de compra) que para un tatuaje (insumos + tu hora de trabajo sumados como "costo").</p>
+    </form>
+
+    {% if resultado %}
+    <div class="calc-result frame">
+      <div>
+        <h2><i data-lucide="tag"></i>Ganancia sobre el costo</h2>
+        <p class="t-sub">La forma más intuitiva: le sumás el {{ resultado.margen }}% de lo que te costó.</p>
+        <div class="big num">{{ resultado.precio_markup }}</div>
+        <dl class="kv"><dt>Ganancia</dt><dd class="num">{{ resultado.ganancia_markup }}</dd></dl>
+      </div>
+      <hr class="sep">
+      <div>
+        <h2><i data-lucide="percent"></i>Ganancia sobre el precio final</h2>
+        <p class="t-sub">La que usan los contadores: el {{ resultado.margen }}% de lo que termina pagando el cliente es tu ganancia.</p>
+        {% if resultado.precio_margen %}
+        <div class="big num">{{ resultado.precio_margen }}</div>
+        <dl class="kv"><dt>Ganancia</dt><dd class="num">{{ resultado.ganancia_margen }}</dd></dl>
+        {% else %}
+        <p class="empty">Con 95% o más esta cuenta no cierra. Bajá el porcentaje.</p>
+        {% endif %}
+      </div>
+    </div>
+    {% else %}
+    <div class="panel frame">
+      <p class="empty">Completá los dos datos para ver el precio sugerido.</p>
+    </div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

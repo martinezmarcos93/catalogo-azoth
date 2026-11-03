@@ -1,0 +1,330 @@
+import sqlite3
+from pathlib import Path
+
+import click
+from flask import current_app, g
+
+
+def obtener_conexion():
+    if "db" not in g:
+        g.db = sqlite3.connect(
+            current_app.config["DATABASE"],
+            detect_types=sqlite3.PARSE_DECLTYPES,
+        )
+        g.db.row_factory = sqlite3.Row
+        g.db.execute("PRAGMA foreign_keys = ON")
+    return g.db
+
+
+def cerrar_conexion(e=None):
+    db = g.pop("db", None)
+    if db is not None:
+        db.close()
+
+
+def inicializar_esquema():
+    db = obtener_conexion()
+    esquema = Path(__file__).with_name("schema.sql").read_text(encoding="utf-8")
+    db.executescript(esquema)
+    db.commit()
+
+
+def registrar_comandos(app):
+    app.teardown_appcontext(cerrar_conexion)
+    app.cli.add_command(_comando_inicializar_db)
+
+
+@click.command("init-db")
+def _comando_inicializar_db():
+    """Crea las tablas si no existen (no borra datos)."""
+    inicializar_esquema()
+    click.echo("Base de datos lista.")
+
+
+def _fila_a_dict(fila):
+    return dict(fila) if fila is not None else None
+
+
+# ---------- usuario ----------
+
+def existe_usuario():
+    db = obtener_conexion()
+    return db.execute("SELECT 1 FROM usuario WHERE id = 1").fetchone() is not None
+
+
+def obtener_usuario():
+    db = obtener_conexion()
+    return _fila_a_dict(db.execute("SELECT * FROM usuario WHERE id = 1").fetchone())
+
+
+def crear_usuario(nombre, clave_hash):
+    db = obtener_conexion()
+    db.execute(
+        "INSERT INTO usuario (id, nombre, clave_hash) VALUES (1, ?, ?)",
+        (nombre, clave_hash),
+    )
+    db.commit()
+
+
+def actualizar_clave_usuario(clave_hash):
+    db = obtener_conexion()
+    db.execute("UPDATE usuario SET clave_hash = ? WHERE id = 1", (clave_hash,))
+    db.commit()
+
+
+# ---------- configuración (clave/valor) ----------
+
+def listar_configuracion():
+    db = obtener_conexion()
+    filas = db.execute("SELECT clave, valor FROM configuracion").fetchall()
+    return {f["clave"]: f["valor"] for f in filas}
+
+
+def obtener_configuracion(clave, por_defecto=""):
+    db = obtener_conexion()
+    fila = db.execute(
+        "SELECT valor FROM configuracion WHERE clave = ?", (clave,)
+    ).fetchone()
+    return fila["valor"] if fila else por_defecto
+
+
+def actualizar_configuracion(clave, valor):
+    db = obtener_conexion()
+    db.execute(
+        "INSERT INTO configuracion (clave, valor) VALUES (?, ?) "
+        "ON CONFLICT(clave) DO UPDATE SET valor = excluded.valor",
+        (clave, valor),
+    )
+    db.commit()
+
+
+_CONFIG_SITIO_DEFAULTS = {
+    "instagram_usuario": "azothlibreria",
+    "whatsapp_numero": "",
+    "direccion": "Bolívar 1447, San Telmo",
+    "horario_texto": "14 a 19 h · martes y domingo cerrado",
+}
+
+
+def obtener_config_sitio():
+    guardado = listar_configuracion()
+    return {clave: guardado.get(clave, valor) or valor for clave, valor in _CONFIG_SITIO_DEFAULTS.items()}
+
+
+# ---------- libros ----------
+
+def existe_libro(libro_id):
+    db = obtener_conexion()
+    return db.execute(
+        "SELECT 1 FROM libros WHERE id = ?", (libro_id,)
+    ).fetchone() is not None
+
+
+def obtener_libro(libro_id):
+    db = obtener_conexion()
+    return _fila_a_dict(
+        db.execute("SELECT * FROM libros WHERE id = ?", (libro_id,)).fetchone()
+    )
+
+
+def listar_libros(buscar="", tema="", tipo="", disponibilidad=""):
+    db = obtener_conexion()
+    condiciones, parametros = [], []
+    if buscar:
+        condiciones.append("(titulo LIKE ? OR autor LIKE ? OR editorial LIKE ?)")
+        comodin = f"%{buscar}%"
+        parametros += [comodin, comodin, comodin]
+    if tema:
+        condiciones.append("tema = ?")
+        parametros.append(tema)
+    if tipo:
+        condiciones.append("tipo = ?")
+        parametros.append(tipo)
+    if disponibilidad == "1":
+        condiciones.append("vendido = 0")
+    elif disponibilidad == "0":
+        condiciones.append("vendido = 1")
+    sql = "SELECT * FROM libros"
+    if condiciones:
+        sql += " WHERE " + " AND ".join(condiciones)
+    sql += " ORDER BY nro DESC"
+    return [dict(f) for f in db.execute(sql, parametros).fetchall()]
+
+
+def siguiente_nro_libro():
+    db = obtener_conexion()
+    fila = db.execute("SELECT MAX(nro) AS m FROM libros").fetchone()
+    return (fila["m"] or 0) + 1
+
+
+def crear_libro(datos):
+    db = obtener_conexion()
+    datos = dict(datos)
+    datos["nro"] = siguiente_nro_libro()
+    db.execute(
+        """INSERT INTO libros
+           (id, nro, titulo, autor, editorial, anio, pais, tapa, paginas,
+            tema, tipo, estado, precio, ilustrado, nota, vendido)
+           VALUES (:id, :nro, :titulo, :autor, :editorial, :anio, :pais, :tapa,
+                   :paginas, :tema, :tipo, :estado, :precio, :ilustrado, :nota, 0)""",
+        datos,
+    )
+    db.commit()
+    return datos["id"]
+
+
+def actualizar_libro(libro_id, datos):
+    db = obtener_conexion()
+    datos = dict(datos, id=libro_id)
+    db.execute(
+        """UPDATE libros SET titulo=:titulo, autor=:autor, editorial=:editorial,
+           anio=:anio, pais=:pais, tapa=:tapa, paginas=:paginas, tema=:tema,
+           tipo=:tipo, estado=:estado, precio=:precio, ilustrado=:ilustrado,
+           nota=:nota WHERE id=:id""",
+        datos,
+    )
+    db.commit()
+
+
+def eliminar_libro(libro_id):
+    db = obtener_conexion()
+    db.execute("DELETE FROM instagram_pendiente WHERE libro_id = ?", (libro_id,))
+    db.execute("DELETE FROM libros WHERE id = ?", (libro_id,))
+    db.commit()
+
+
+def marcar_vendido(libro_id):
+    db = obtener_conexion()
+    db.execute("UPDATE libros SET vendido = 1 WHERE id = ?", (libro_id,))
+    db.execute(
+        "INSERT OR IGNORE INTO instagram_pendiente (libro_id) VALUES (?)",
+        (libro_id,),
+    )
+    db.commit()
+
+
+# ---------- avisos pendientes de Instagram ----------
+
+def listar_instagram_pendiente():
+    db = obtener_conexion()
+    filas = db.execute(
+        """SELECT l.* FROM instagram_pendiente p
+           JOIN libros l ON l.id = p.libro_id
+           ORDER BY l.nro DESC"""
+    ).fetchall()
+    return [dict(f) for f in filas]
+
+
+def confirmar_post_instagram(libro_id):
+    db = obtener_conexion()
+    db.execute("DELETE FROM instagram_pendiente WHERE libro_id = ?", (libro_id,))
+    db.commit()
+
+
+# ---------- ventas ----------
+
+def existe_venta(venta_id):
+    db = obtener_conexion()
+    return db.execute(
+        "SELECT 1 FROM ventas WHERE id = ?", (venta_id,)
+    ).fetchone() is not None
+
+
+def obtener_venta(venta_id):
+    db = obtener_conexion()
+    return _fila_a_dict(
+        db.execute("SELECT * FROM ventas WHERE id = ?", (venta_id,)).fetchone()
+    )
+
+
+def listar_ventas():
+    db = obtener_conexion()
+    filas = db.execute("SELECT * FROM ventas ORDER BY fecha DESC, id DESC").fetchall()
+    return [dict(f) for f in filas]
+
+
+def listar_ventas_del_mes(anio, mes):
+    db = obtener_conexion()
+    patron = f"{anio:04d}-{mes:02d}-%"
+    filas = db.execute(
+        "SELECT * FROM ventas WHERE fecha LIKE ? ORDER BY fecha DESC", (patron,)
+    ).fetchall()
+    return [dict(f) for f in filas]
+
+
+def crear_venta(fecha, libro_id, medio, entrega, precio):
+    db = obtener_conexion()
+    cursor = db.execute(
+        "INSERT INTO ventas (fecha, libro_id, medio, entrega, precio) "
+        "VALUES (?, ?, ?, ?, ?)",
+        (fecha, libro_id, medio, entrega, precio),
+    )
+    db.commit()
+    marcar_vendido(libro_id)
+    return cursor.lastrowid
+
+
+def eliminar_venta(venta_id):
+    db = obtener_conexion()
+    db.execute("DELETE FROM ventas WHERE id = ?", (venta_id,))
+    db.commit()
+
+
+# ---------- turnos ----------
+
+def existe_turno(turno_id):
+    db = obtener_conexion()
+    return db.execute(
+        "SELECT 1 FROM turnos WHERE id = ?", (turno_id,)
+    ).fetchone() is not None
+
+
+def obtener_turno(turno_id):
+    db = obtener_conexion()
+    return _fila_a_dict(
+        db.execute("SELECT * FROM turnos WHERE id = ?", (turno_id,)).fetchone()
+    )
+
+
+def listar_turnos():
+    db = obtener_conexion()
+    filas = db.execute(
+        "SELECT * FROM turnos ORDER BY fecha ASC, hora ASC"
+    ).fetchall()
+    return [dict(f) for f in filas]
+
+
+def siguiente_nro_turno():
+    db = obtener_conexion()
+    fila = db.execute("SELECT MAX(nro) AS m FROM turnos").fetchone()
+    return (fila["m"] or 0) + 1
+
+
+def crear_turno(datos):
+    db = obtener_conexion()
+    datos = dict(datos)
+    datos["nro"] = siguiente_nro_turno()
+    db.execute(
+        """INSERT INTO turnos (nro, fecha, hora, cliente, diseno, sesion, total, sena, estado)
+           VALUES (:nro, :fecha, :hora, :cliente, :diseno, :sesion, :total, :sena, :estado)""",
+        datos,
+    )
+    db.commit()
+
+
+def actualizar_turno(turno_id, datos):
+    db = obtener_conexion()
+    datos = dict(datos, id=turno_id)
+    db.execute(
+        """UPDATE turnos SET fecha=:fecha, hora=:hora, cliente=:cliente,
+           diseno=:diseno, sesion=:sesion, total=:total, sena=:sena, estado=:estado
+           WHERE id=:id""",
+        datos,
+    )
+    db.commit()
+
+
+def eliminar_turno(turno_id):
+    db = obtener_conexion()
+    db.execute("DELETE FROM turnos WHERE id = ?", (turno_id,))
+    db.commit()

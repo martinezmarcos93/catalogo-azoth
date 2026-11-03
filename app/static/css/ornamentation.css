@@ -1,0 +1,28 @@
+/* AZOTH · ornamentation
+   Todo lo que no es función vive acá, y es poco: grano de papel, filetes técnicos,
+   numeración editorial y un único diagrama geométrico en el Panel. */
+
+/* Grano de papel e impresión, apenas perceptible */
+body::after{content:"";position:fixed;inset:0;z-index:3;pointer-events:none;opacity:.04;background-image:url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .6 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+
+/* Filete técnico entre secciones de un panel */
+hr.sep{height:1px;margin:var(--sp-3) 0 var(--sp-2);border:0;background:var(--line)}
+
+/* Numeración editorial: folio de cada pantalla */
+.kicker::before{content:"";display:inline-block;width:7px;height:7px;margin-right:var(--sp-2);vertical-align:1px;background:var(--bordo);outline:1px solid var(--state-alert-edge)}
+
+/* Logo: se conserva tal cual, en tono hueso */
+.brand img,.vit-head img{filter:invert(1) brightness(.8) sepia(.06)}
+
+/* Diagrama geométrico (solo Panel): SVG estático, sin canvas ni JS */
+.head svg.diagram{position:absolute;top:0;right:26%;width:200px;height:100%;opacity:.6;pointer-events:none;stroke:var(--steel);fill:none;stroke-width:.8}
+.head svg.diagram circle.outer{stroke-width:1}
+.head svg.diagram .tick{stroke-width:1}
+.head svg.diagram circle.center{fill:var(--bone);stroke:none}
+
+/* Marca de vendido */
+.sold-band{position:absolute;top:12px;right:-30px;padding:2px 34px;transform:rotate(35deg);background:var(--bordo);color:var(--bone);font-size:11px;font-weight:600;letter-spacing:.15em;text-transform:uppercase}
+
+@media (max-width:860px){
+  .head svg.diagram{display:none}
+}

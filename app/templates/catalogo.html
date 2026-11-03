@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% import "_macros.html" as m %}
+{% block titulo %}Catálogo{% endblock %}
+{% block content %}
+<section>
+  <div class="head">
+    <div><span class="kicker">Folio II</span><h1>Catálogo</h1><p>Ejemplares, ediciones y estado. De acá sale el texto de cada post.</p></div>
+    <div class="actions">
+      <button class="btn" type="button" onclick="document.getElementById('dlg-crear').showModal()"><i data-lucide="book-plus"></i>Cargar libro</button>
+      <a class="btn ghost" href="{{ url_for('rutas.catalogo_csv') }}"><i data-lucide="sheet"></i>Descargar planilla</a>
+    </div>
+  </div>
+
+  <form class="toolbar" method="get">
+    <label class="search" for="q"><i data-lucide="search"></i><input type="search" id="q" name="q" value="{{ q }}" placeholder="Buscar por título, autor o editorial"></label>
+    <select name="tema" aria-label="Tema" onchange="this.form.submit()">
+      <option value="">Todos los temas</option>
+      {% for t in TEMAS %}<option value="{{ t }}" {{ 'selected' if t==tema }}>{{ t }}</option>{% endfor %}
+    </select>
+    <select name="tipo" aria-label="Tipo" onchange="this.form.submit()">
+      <option value="">Todos los tipos</option>
+      {% for t in TIPOS %}<option value="{{ t }}" {{ 'selected' if t==tipo }}>{{ t }}</option>{% endfor %}
+    </select>
+    <select name="disp" aria-label="Disponibilidad" onchange="this.form.submit()">
+      <option value="" {{ 'selected' if disp=='' }}>Disponibles y vendidos</option>
+      <option value="1" {{ 'selected' if disp=='1' }}>Solo disponibles</option>
+      <option value="0" {{ 'selected' if disp=='0' }}>Solo vendidos</option>
+    </select>
+    <button class="btn ghost sm" type="submit">Buscar</button>
+    <span class="count num">{{ libros | length }} de {{ total }} títulos</span>
+  </form>
+
+  <div class="frame tablebox"><div class="tablewrap"><table>
+    <thead><tr><th></th><th>Título</th><th>Edición</th><th>Tipo</th><th>Estado</th><th class="r">Precio</th><th></th></tr></thead>
+    <tbody>
+      {% for b in libros %}
+      <tr>
+        <td>{{ m.cover(b, mini=True) }}</td>
+        <td>
+          <div class="t-title">{{ b.titulo }}</div>
+          <div class="t-sub"><span class="fno">{{ ficha(b.nro) }}</span>{{ b.autor or "Anónimo" }} · {{ b.tema }}</div>
+          {% if b.nota %}<div class="t-sub"><i>{{ b.nota }}</i></div>{% endif %}
+        </td>
+        <td>{{ b.editorial }}<div class="t-sub num">{{ b.anio or '' }} · {{ b.pais }}</div></td>
+        <td>{{ m.tipo_chip(b) }}</td>
+        <td class="t-sub">{{ b.estado }}</td>
+        <td class="r num">{% if b.vendido %}<span class="chip sold">Vendido</span>{% else %}{{ precio_o_consultar(b) }}{% endif %}</td>
+        <td class="r" style="white-space:nowrap">
+          <button class="btn ghost sm" type="button" onclick="document.getElementById('dlg-ig-{{ b.id }}').showModal()" title="Texto para Instagram"><i data-lucide="instagram"></i>Post</button>
+          <button class="btn ghost sm" type="button" onclick="document.getElementById('dlg-editar-{{ b.id }}').showModal()" aria-label="Editar"><i data-lucide="pencil"></i></button>
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="7" class="empty">No hay libros que coincidan con la búsqueda.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table></div></div>
+</section>
+
+<!-- Cargar libro -->
+<dialog id="dlg-crear">
+  <form class="dlg" method="post" action="{{ url_for('rutas.crear_libro') }}">
+    <h2>Cargar libro</h2>
+    {% include "_form_libro.html" with context %}
+    <div class="end"><button class="btn ghost" type="button" onclick="this.closest('dialog').close()">Cancelar</button><button class="btn" type="submit">Guardar</button></div>
+  </form>
+</dialog>
+
+{% for b in libros %}
+<dialog id="dlg-editar-{{ b.id }}">
+  <form class="dlg" method="post" action="{{ url_for('rutas.actualizar_libro', libro_id=b.id) }}">
+    <h2>Editar libro</h2>
+    {% include "_form_libro.html" with context %}
+    <div class="end"><button class="btn ghost" type="button" onclick="this.closest('dialog').close()">Cancelar</button>
+      <button class="btn danger" type="submit" formaction="{{ url_for('rutas.eliminar_libro', libro_id=b.id) }}" onclick="return confirm('¿Eliminar este libro del catálogo?')">Eliminar</button>
+      <button class="btn" type="submit">Guardar</button></div>
+  </form>
+</dialog>
+
+<dialog id="dlg-ig-{{ b.id }}">
+  <div class="dlg">
+    <h2>Texto para el post</h2>
+    <p class="t-sub">Con el mismo formato que usás en Instagram. Copialo y pegalo debajo de la foto.</p>
+    <pre class="caption">{{ texto_post_instagram(b) }}</pre>
+    <div class="end"><button class="btn ghost" type="button" onclick="this.closest('dialog').close()">Cerrar</button>
+      <button class="btn" type="button" data-copy="{{ texto_post_instagram(b) }}" onclick="copiarAlPortapapeles(this)"><i data-lucide="copy"></i>Copiar texto</button></div>
+  </div>
+</dialog>
+{% endfor %}
+{% endblock %}

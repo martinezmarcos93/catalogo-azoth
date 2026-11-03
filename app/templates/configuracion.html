@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block titulo %}Configuración{% endblock %}
+{% block content %}
+<section>
+  <div class="head"><div><span class="kicker">Folio VII</span><h1>Configuración</h1><p>Tu contraseña y los datos de contacto que ve el cliente.</p></div></div>
+
+  <div class="cols">
+    <form class="panel frame" method="post" action="{{ url_for('rutas.actualizar_clave') }}">
+      <h2><i data-lucide="key-round"></i>Cambiar contraseña</h2><hr class="sep">
+      <div class="form">
+        <label class="full">Contraseña actual<input name="clave_actual" type="password" required autocomplete="current-password"></label>
+        <label class="full">Contraseña nueva<input name="clave_nueva" type="password" minlength="4" required autocomplete="new-password"></label>
+        <label class="full">Repetila<input name="clave_nueva_repetida" type="password" minlength="4" required autocomplete="new-password"></label>
+      </div>
+      <div class="end" style="justify-content:flex-start;margin-top:var(--sp-4)"><button class="btn" type="submit">Actualizar contraseña</button></div>
+    </form>
+
+    <form class="panel frame" method="post" action="{{ url_for('rutas.actualizar_sitio') }}">
+      <h2><i data-lucide="store"></i>Datos del local</h2><hr class="sep">
+      <div class="form">
+        <label class="full">Usuario de Instagram (sin @)<input name="instagram_usuario" value="{{ config.instagram_usuario }}" placeholder="azothlibreria"></label>
+        <label class="full">WhatsApp (solo números, con código de país)<input name="whatsapp_numero" value="{{ config.whatsapp_numero }}" placeholder="5491122334455"></label>
+        <label class="full">Dirección<input name="direccion" value="{{ config.direccion }}"></label>
+        <label class="full">Horario<input name="horario_texto" value="{{ config.horario_texto }}"></label>
+      </div>
+      <div class="end" style="justify-content:flex-start;margin-top:var(--sp-4)"><button class="btn" type="submit">Guardar datos</button></div>
+    </form>
+  </div>
+</section>
+{% endblock %}

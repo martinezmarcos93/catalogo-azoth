@@ -1,0 +1,67 @@
+/* AZOTH · design-tokens
+   Única fuente de verdad visual. Los demás archivos consumen estas variables
+   y no declaran colores, fuentes ni medidas propias. */
+:root{
+  color-scheme:dark;
+
+  /* Paleta base: Occult Industrial Editorial */
+  --carbon:#101114;      /* fondo principal */
+  --graphite:#202226;    /* superficies y tarjetas */
+  --steel:#777D82;       /* bordes, separadores, iconografía */
+  --bone:#C9C7C0;        /* texto principal */
+  --bordo:#672E37;       /* acento excepcional: estados y detalles puntuales */
+
+  /* Superficies */
+  --surface-page:var(--carbon);
+  --surface-side:#151619;
+  --surface-card:var(--graphite);
+  --surface-raised:#2a2d32;   /* hover, filas activas */
+  --surface-field:#17181b;    /* campos de formulario */
+
+  /* Texto (todos verificados sobre carbón y grafito) */
+  --text:var(--bone);
+  --text-2:#a5a49d;     /* secundario */
+  --text-3:#8a8983;     /* etiquetas y datos de apoyo */
+  --text-inverse:var(--carbon);
+
+  /* Líneas */
+  --line:#33363b;
+  --line-strong:#4d5156;
+  --line-accent:var(--steel);
+
+  /* Estados: siempre acompañados de texto */
+  --state-alert:var(--bordo);
+  --state-alert-edge:#8a4650;
+  --state-alert-ink:var(--bone);
+
+  /* Tipografía: una serif editorial y una sans funcional */
+  --font-serif:"Cormorant Garamond",Georgia,"Times New Roman",serif;
+  --font-sans:"IBM Plex Sans","Helvetica Neue",Arial,sans-serif;
+  --font-mono:"IBM Plex Mono","Courier New",monospace;
+
+  /* Escala tipográfica */
+  --fs-xs:12px;
+  --fs-sm:13.5px;
+  --fs-md:15.5px;
+  --fs-lg:17px;
+  --fs-xl:20px;
+  --fs-2xl:28px;
+  --fs-3xl:44px;
+
+  /* Espaciado */
+  --sp-1:4px;  --sp-2:8px;  --sp-3:12px; --sp-4:16px;
+  --sp-5:24px; --sp-6:32px; --sp-7:48px;
+
+  /* Radios */
+  --r-1:3px;
+  --r-2:6px;
+  --r-pill:999px;
+
+  /* Estructura */
+  --side-w:240px;
+  --pad-x:clamp(16px,3vw,40px);
+
+  /* Interacción */
+  --focus:2px solid var(--bone);
+  --t:.12s;
+}

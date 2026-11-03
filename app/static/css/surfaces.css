@@ -1,0 +1,48 @@
+/* AZOTH · surfaces
+   Estructura de página, tarjetas, paneles, diálogos y avisos.
+   Una sola superficie de tarjeta (.frame): grafito, borde fino, sin marcos ni sombras. */
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--surface-page)}
+img{max-width:100%}
+.hidden{display:none!important}
+
+.app{display:grid;grid-template-columns:var(--side-w) minmax(0,1fr);min-height:100%}
+.app > div{min-width:0}
+main{padding:0 var(--pad-x) 72px;min-width:0}
+
+/* Encabezado de pantalla */
+.head{position:relative;display:flex;flex-wrap:wrap;gap:var(--sp-4) var(--sp-5);align-items:flex-end;justify-content:space-between;padding:var(--sp-6) 0 var(--sp-5);margin-bottom:var(--sp-5);overflow:hidden;border-bottom:1px solid var(--line-strong)}
+.head > div{position:relative}
+.actions{display:flex;flex-wrap:wrap;gap:var(--sp-2)}
+
+/* Tarjeta base */
+.frame{background:var(--surface-card);border:1px solid var(--line);border-radius:var(--r-2)}
+.panel{display:flex;flex-direction:column;min-width:0;padding:var(--sp-4) var(--sp-5)}
+.panel hr.sep{width:100%}
+.panel .foot{margin-top:auto;padding-top:var(--sp-4)}
+.tablebox{padding:var(--sp-1) var(--sp-2)}
+
+/* Rejillas */
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:var(--sp-4);margin-bottom:var(--sp-5)}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:var(--sp-4)}
+
+/* Aviso */
+.demo-note{display:flex;flex-wrap:wrap;gap:var(--sp-2) var(--sp-4);align-items:center;margin-top:var(--sp-5);padding:var(--sp-2) var(--sp-3);border:1px dashed var(--line-strong);border-radius:var(--r-2)}
+
+/* Diálogos */
+dialog{width:min(600px,calc(100% - 32px));padding:0;border:1px solid var(--line-strong);border-radius:var(--r-2);background:var(--surface-card);color:var(--text)}
+dialog::backdrop{background:rgba(8,8,10,.78)}
+.dlg{display:flex;flex-direction:column;gap:var(--sp-4);padding:var(--sp-5) var(--sp-5)}
+.dlg .end{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:var(--sp-2)}
+.detail{display:grid;grid-template-columns:170px 1fr;gap:var(--sp-5)}
+
+/* Aviso flotante (confirmaciones tras un POST) */
+.toast{position:fixed;bottom:var(--sp-5);left:50%;transform:translateX(-50%);z-index:20;padding:var(--sp-3) var(--sp-4);border-radius:var(--r-1);background:var(--bone);color:var(--text-inverse);box-shadow:0 8px 24px rgba(0,0,0,.4)}
+
+@media (max-width:860px){
+  .app{grid-template-columns:minmax(0,1fr)}
+  .detail{grid-template-columns:1fr}
+  .detail .cover{max-width:170px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}

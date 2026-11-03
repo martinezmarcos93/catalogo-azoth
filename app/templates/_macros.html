@@ -1,0 +1,21 @@
+{% macro cover(libro, mini=False) %}
+<div class="cover{{ ' mini' if mini else '' }}" style="background:radial-gradient(120% 80% at 30% 20%,rgba(201,199,192,.07),transparent 60%),{{ tono(libro.tema) }}">
+  <div class="in">
+    <span class="ct">{{ libro.titulo }}</span>
+    <span class="ce">{{ glifo(libro.tema) | safe }}</span>
+    <span class="ca">{{ libro.autor or libro.editorial }}</span>
+  </div>
+  {% if not mini %}<span class="fn">{{ ficha(libro.nro) }}</span>{% endif %}
+  {% if libro.vendido and not mini %}<span class="sold-band">Vendido</span>{% endif %}
+</div>
+{% endmacro %}
+
+{% macro tipo_chip(libro) %}
+{% set es_rara = libro.tipo in ("Antigüedad", "Descatalogado", "Obra original") %}
+<span class="chip{{ ' rare' if es_rara else '' }}">{{ libro.tipo }}</span>
+{% endmacro %}
+
+{% macro estado_chip(turno) %}
+{% set clase = '' if turno.estado=='Cobrado' else ('alert' if turno.estado=='Falta seña' else 'ok') %}
+<span class="chip {{ clase }}">{{ turno.estado }}</span>
+{% endmacro %}

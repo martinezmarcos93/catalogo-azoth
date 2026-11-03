@@ -1,0 +1,34 @@
+{% set libro = b if b is defined else None %}
+<div class="form">
+  <label class="full">Título<input name="titulo" value="{{ libro.titulo if libro else '' }}" required></label>
+  <label>Autor<input name="autor" value="{{ libro.autor if libro else '' }}"></label>
+  <label>Editorial<input name="editorial" value="{{ libro.editorial if libro else '' }}"></label>
+  <label>Año<input name="anio" type="number" min="1500" max="2100" value="{{ libro.anio if libro else '' }}"></label>
+  <label>País<input name="pais" value="{{ libro.pais if libro else 'Argentina' }}"></label>
+  <label>Tapa
+    <select name="tapa">
+      {% for t in ["Tapa blanda","Tapa dura","Tapa dura entelada","Tapa blanda con solapas"] %}
+      <option {{ 'selected' if libro and libro.tapa==t }}>{{ t }}</option>
+      {% endfor %}
+    </select>
+  </label>
+  <label>Páginas<input name="paginas" type="number" min="1" value="{{ libro.paginas if libro else '' }}"></label>
+  <label>Tema
+    <select name="tema">
+      {% for t in TEMAS %}<option {{ 'selected' if libro and libro.tema==t or (not libro and loop.first) }}>{{ t }}</option>{% endfor %}
+    </select>
+  </label>
+  <label>Tipo
+    <select name="tipo">
+      {% for t in TIPOS %}<option {{ 'selected' if libro and libro.tipo==t or (not libro and loop.first) }}>{{ t }}</option>{% endfor %}
+    </select>
+  </label>
+  <label class="full">Estado
+    <select name="estado">
+      {% for e in ESTADOS %}<option {{ 'selected' if libro and libro.estado==e or (not libro and loop.first) }}>{{ e }}</option>{% endfor %}
+    </select>
+  </label>
+  <label>Precio ($)<input name="precio" type="number" min="0" step="1000" value="{{ libro.precio if libro else '' }}" required></label>
+  <label class="check"><input name="ilustrado" type="checkbox" {{ 'checked' if libro and libro.ilustrado }}> Ilustrado</label>
+  <label class="full">Detalle del ejemplar<input name="nota" value="{{ libro.nota if libro else '' }}" placeholder="Ej.: 1ra edición en español, sello de biblioteca"></label>
+</div>

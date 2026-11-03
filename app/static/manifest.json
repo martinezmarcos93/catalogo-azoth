@@ -1,0 +1,15 @@
+{
+  "name": "Azoth · Sistema de gestión",
+  "short_name": "Azoth",
+  "description": "Catálogo, ventas y turnos de Azoth",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#101114",
+  "theme_color": "#101114",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icons/icon-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

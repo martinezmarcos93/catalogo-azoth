@@ -1,0 +1,79 @@
+/* AZOTH · typography
+   Serif editorial (Cormorant Garamond): títulos, nombres de libros, firmas.
+   Sans funcional (IBM Plex Sans): navegación, datos, precios, formularios, estados.
+   Mono (IBM Plex Mono): fichas, fechas y cifras de la calculadora. */
+body{
+  margin:0;
+  font-family:var(--font-sans);
+  font-size:var(--fs-md);
+  line-height:1.5;
+  color:var(--text);
+  font-variant-numeric:lining-nums;
+  -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3{font-weight:500;margin:0;text-wrap:balance}
+button,input,select,textarea{font:inherit;color:inherit}
+.num,.amt{font-variant-numeric:tabular-nums;font-family:var(--font-mono)}
+
+/* Jerarquía de página */
+.kicker{display:block;margin:0 0 var(--sp-3);font-size:var(--fs-xs);font-weight:500;letter-spacing:.18em;text-transform:uppercase;color:var(--text-3)}
+.head h1{font-family:var(--font-serif);font-weight:600;font-size:var(--fs-3xl);line-height:1.02;letter-spacing:-.005em}
+.head p{margin:var(--sp-2) 0 0;max-width:62ch;font-size:var(--fs-lg);color:var(--text-2)}
+.top .crumb{font-family:var(--font-serif);font-size:var(--fs-xl);font-weight:600}
+.top .crumb span{color:var(--text-2);font-weight:500}
+.top .who{font-size:var(--fs-sm);color:var(--text-2)}
+
+/* Paneles y tarjetas */
+.panel h2{display:flex;align-items:center;gap:var(--sp-2);font-size:var(--fs-xs);font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--text)}
+.tile .k{font-size:11.5px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--text-2)}
+.tile .v{font-size:24px;font-weight:500;line-height:1.2;font-variant-numeric:tabular-nums;font-family:var(--font-mono)}
+.tile .s{font-size:var(--fs-xs);color:var(--text-3)}
+.dlg h2{font-family:var(--font-serif);font-size:var(--fs-2xl);font-weight:600}
+.demo-note{font-size:var(--fs-sm);color:var(--text-2)}
+.empty{color:var(--text-2);font-style:italic}
+
+/* Títulos de objeto: libros, clientes */
+.t-title{font-family:var(--font-serif);font-size:var(--fs-xl);font-weight:600;line-height:1.15}
+.t-sub{font-size:var(--fs-sm);color:var(--text-2)}
+.detail .t-title{font-size:26px}
+.li-t{display:block;font-family:var(--font-serif);font-size:18px;font-weight:600;line-height:1.2}
+.li-m{display:flex;flex-wrap:wrap;gap:0 var(--sp-2);font-size:var(--fs-sm);color:var(--text-2)}
+.li-m>span+span::before{content:"·";margin-right:var(--sp-2);color:var(--steel)}
+.when ~ .grow .li-m{flex-direction:column}
+.when ~ .grow .li-m>span+span::before{content:none}
+.when b{display:block;font-size:var(--fs-sm);font-weight:600}
+.when span{display:block;font-size:var(--fs-sm);color:var(--text-2)}
+.amt{font-weight:600;white-space:nowrap}
+
+/* Tablas */
+th{font-size:11.5px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--text-3)}
+
+/* Vitrina y tapas */
+.book .bt{font-family:var(--font-serif);font-size:var(--fs-xl);font-weight:600;line-height:1.15}
+.book .ba{font-size:var(--fs-sm);color:var(--text-2)}
+.book .bp{font-weight:600}
+.vit-head .t{font-size:var(--fs-lg);font-weight:600;letter-spacing:.3em}
+.vit-head .s{font-size:var(--fs-sm);color:var(--text-2)}
+.cover .ct{font-family:var(--font-serif);font-weight:600;font-size:clamp(10px,1.05vw,13.5px);letter-spacing:.08em;line-height:1.25;text-transform:uppercase}
+.cover .ca{font-family:var(--font-serif);font-style:italic;font-size:clamp(11px,1vw,14px);opacity:.9}
+.cover .fn,.fno{font-weight:500;letter-spacing:.08em;font-variant-numeric:tabular-nums;font-family:var(--font-mono)}
+.cover .fn{font-size:clamp(7px,.65vw,9px)}
+.fno{font-size:var(--fs-xs);color:var(--text-3);margin-right:var(--sp-2)}
+
+/* Agenda */
+.day h3{font-size:var(--fs-xs);font-weight:600;letter-spacing:.12em;text-transform:uppercase}
+.day .dn{display:block;font-family:var(--font-serif);font-size:24px;font-weight:600;letter-spacing:0;text-transform:none}
+.slot{font-size:13px;line-height:1.3}
+.slot b{display:block;font-size:var(--fs-sm);font-weight:600}
+
+/* Detalle y texto de Instagram */
+.kv dt{color:var(--text-2)}
+pre.caption{font-family:var(--font-sans);font-size:var(--fs-sm)}
+.toast{font-size:14.5px}
+
+/* Iconografía: lineal, trazo fino */
+svg.lucide{flex:none;width:1.1em;height:1.1em;stroke-width:1.5}
+.panel h2 svg.lucide{width:18px;height:18px;color:var(--steel)}
+
+/* Colofón */
+.colofon{margin:var(--sp-7) 0 0;text-align:center;font-family:var(--font-serif);font-style:italic;font-size:var(--fs-lg);color:var(--text-3)}

@@ -1,0 +1,78 @@
+/* AZOTH · data-display
+   Indicadores, listados, tablas, tapas, vitrina, barras y agenda. */
+
+/* Indicadores */
+.tile{display:flex;align-items:center;gap:var(--sp-3);padding:var(--sp-4)}
+.tile .ic{flex:none;width:40px;height:40px;display:grid;place-items:center;border:1px solid var(--line-strong);border-radius:var(--r-2);background:var(--surface-field);color:var(--steel)}
+.tile .ic svg.lucide{width:22px;height:22px}
+.tile.hero{background:var(--surface-raised);border-color:var(--steel)}
+.tile.hero .ic{color:var(--bone)}
+
+/* Listados */
+.list{display:flex;flex-direction:column;margin:0;padding:0;list-style:none}
+.list li{display:flex;align-items:center;gap:var(--sp-3);padding:var(--sp-3) 0;border-top:1px solid var(--line)}
+.list li:first-child{border-top:0}
+.list .grow{flex:1;min-width:0}
+.when{flex:none;width:80px;padding-right:var(--sp-3);border-right:1px solid var(--line)}
+
+/* Tablas */
+.tablewrap{overflow-x:auto}
+table{width:100%;min-width:780px;border-collapse:collapse}
+th,td{padding:var(--sp-3) 14px;text-align:left;vertical-align:middle;border-bottom:1px solid var(--line)}
+th{border-bottom-color:var(--line-strong)}
+tr:last-child td{border-bottom:0}
+tbody tr:hover td{background:rgba(201,199,192,.04)}
+td.r,th.r{text-align:right}
+
+/* Tapas: marcador visual del libro mientras no haya foto */
+.cover{position:relative;width:100%;aspect-ratio:2/3;overflow:hidden;border-radius:2px 4px 4px 2px;box-shadow:inset 5px 0 8px -5px rgba(0,0,0,.7),0 0 0 1px var(--line-strong)}
+.cover .in{position:absolute;inset:8% 9%;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:10% 6%;text-align:center;border:1px solid rgba(201,199,192,.45);color:var(--text)}
+.cover .ce{display:flex;justify-content:center;width:100%}
+.cover .ce svg{width:34%;height:auto;min-width:18px;opacity:.85}
+.cover .fn{position:absolute;left:0;right:0;bottom:2.6%;text-align:center;color:var(--text-2)}
+.cover.mini{flex:none;width:34px;height:48px;border-radius:2px 3px 3px 2px}
+.mini .in{inset:10%;padding:0;justify-content:center}
+.mini .ct,.mini .ca{display:none}
+.mini .ce svg{width:64%}
+
+/* Vitrina */
+.vit-head{display:flex;align-items:center;gap:var(--sp-4);margin-bottom:var(--sp-5);padding:var(--sp-4) var(--sp-5)}
+.vit-head img{width:54px}
+.shelf{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:var(--sp-6) var(--sp-5)}
+.book{display:flex;flex-direction:column;gap:var(--sp-2);padding:0;border:0;background:none;color:var(--text);text-align:left;cursor:pointer}
+.book:hover .bt{text-decoration:underline;text-decoration-color:var(--steel);text-underline-offset:3px}
+.book .rowx{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:var(--sp-2)}
+
+/* Barras por tema y medio de pago */
+.bars{display:flex;flex-direction:column;gap:var(--sp-3);margin-top:var(--sp-2)}
+.bars .b{display:grid;grid-template-columns:120px 1fr 92px;gap:var(--sp-3);align-items:center;font-size:var(--fs-sm)}
+.bars .track{height:6px;border-radius:3px;background:var(--surface-field);border:1px solid var(--line);overflow:hidden}
+.bars .track i{display:block;height:100%;background:var(--steel)}
+
+/* Agenda semanal */
+.week{display:grid;grid-template-columns:repeat(7,minmax(128px,1fr));gap:var(--sp-3);padding:var(--sp-1) 2px var(--sp-2);overflow-x:auto}
+.day{display:flex;flex-direction:column;gap:var(--sp-2);min-height:200px;padding:var(--sp-3)}
+.day.today{border-color:var(--bone)}
+.day.closed{background:repeating-linear-gradient(135deg,transparent 0 9px,rgba(119,125,130,.14) 9px 10px)}
+.day.closed > *{opacity:.7}
+.slot{padding:7px 9px;border-left:2px solid var(--steel);border-radius:0 var(--r-1) var(--r-1) 0;background:rgba(119,125,130,.14)}
+.slot .chip{margin-top:var(--sp-1)}
+.slot.shop{border-left-color:var(--line-strong);background:transparent;color:var(--text-2)}
+
+/* Detalle de libro y texto de Instagram */
+.kv{display:grid;grid-template-columns:auto 1fr;gap:var(--sp-1) 14px;margin:6px 0}
+.kv dd{margin:0}
+pre.caption{max-height:320px;margin:0;padding:var(--sp-4);overflow:auto;white-space:pre-wrap;border:1px solid var(--line-strong);border-radius:var(--r-1);background:var(--surface-field)}
+
+/* Calculadora de costos */
+.calc-grid{display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-5);align-items:start}
+.calc-result{display:flex;flex-direction:column;gap:var(--sp-4);padding:var(--sp-5)}
+.calc-result .big{font-family:var(--font-mono);font-size:40px;font-weight:600;font-variant-numeric:tabular-nums}
+.calc-result dl.kv{grid-template-columns:1fr auto}
+.mode-switch{display:flex;gap:var(--sp-2);margin-bottom:var(--sp-4)}
+.mode-switch a{flex:1;text-align:center}
+
+@media (max-width:860px){
+  .bars .b{grid-template-columns:90px 1fr 74px}
+  .calc-grid{grid-template-columns:1fr}
+}

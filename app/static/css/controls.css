@@ -1,0 +1,45 @@
+/* AZOTH · controls
+   Botones, enlaces, campos de formulario, buscador y chips de estado.
+   Un botón primario (hueso sobre carbón) y uno secundario (contorno acero). */
+:focus-visible{outline:var(--focus);outline-offset:2px}
+
+.btn{display:inline-flex;align-items:center;gap:var(--sp-2);padding:var(--sp-2) var(--sp-4);border:1px solid var(--bone);border-radius:var(--r-1);background:var(--bone);color:var(--text-inverse);font-size:14.5px;font-weight:500;text-decoration:none;cursor:pointer;transition:background var(--t),border-color var(--t)}
+.btn:hover{background:#dcdad3;border-color:#dcdad3}
+.btn.ghost{background:transparent;color:var(--text);border-color:var(--steel)}
+.btn.ghost:hover{background:var(--surface-raised);border-color:var(--bone)}
+.btn.sm{padding:var(--sp-1) var(--sp-3);font-size:var(--fs-sm)}
+.btn.danger{border-color:var(--state-alert-edge);color:var(--bone)}
+.btn.danger:hover{background:var(--state-alert)}
+.link{display:inline-flex;align-items:center;gap:var(--sp-2);padding:0;border:0;background:none;color:var(--text);font-size:14.5px;text-decoration:underline;text-decoration-color:var(--steel);text-underline-offset:3px;cursor:pointer}
+.link:hover{text-decoration-color:var(--bone)}
+
+/* Campos */
+input,select,textarea{padding:var(--sp-2) var(--sp-3);border:1px solid var(--line-strong);border-radius:var(--r-1);background:var(--surface-field);color:var(--text)}
+input::placeholder{color:var(--text-3)}
+select option{background:var(--surface-card)}
+.toolbar{display:flex;flex-wrap:wrap;gap:var(--sp-3);align-items:center;margin-bottom:var(--sp-4)}
+.search{position:relative;flex:1 1 240px;min-width:0}
+.search svg.lucide{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--steel)}
+.search input{width:100%;padding-left:36px}
+.count{margin-left:auto;font-size:var(--fs-sm);color:var(--text-2)}
+.form{display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-3)}
+.form label{display:flex;flex-direction:column;gap:var(--sp-1);font-size:var(--fs-sm);color:var(--text-2)}
+.form .full{grid-column:1/-1}
+.check{flex-direction:row!important;align-items:center;gap:var(--sp-2)!important}
+.field-error{margin:0;font-size:var(--fs-xs);color:var(--bone);background:var(--state-alert);padding:2px 8px;border-radius:var(--r-1);width:fit-content}
+
+/* Chips de estado: contorno = informativo, relleno bordó = requiere atención */
+.chip{display:inline-flex;align-items:center;gap:var(--sp-1);flex:none;padding:1px 10px;border:1px solid var(--line-strong);border-radius:var(--r-pill);font-size:var(--fs-xs);font-weight:500;line-height:1.5;color:var(--text-2);white-space:nowrap}
+.chip.rare{border-color:var(--steel);color:var(--text)}
+.chip.ok{border-color:var(--text-2);color:var(--text)}
+.chip.alert,.chip.sold{background:var(--state-alert);border-color:var(--state-alert-edge);color:var(--state-alert-ink)}
+
+/* Login */
+.login-wrap{min-height:100%;display:grid;place-items:center;padding:var(--sp-5)}
+.login-card{width:min(360px,100%);display:flex;flex-direction:column;gap:var(--sp-5);padding:var(--sp-6) var(--sp-5)}
+.login-card img{width:72px;align-self:center;filter:invert(1) brightness(.8) sepia(.06)}
+.login-card form{display:flex;flex-direction:column;gap:var(--sp-3)}
+
+@media (max-width:860px){
+  .form{grid-template-columns:1fr}
+}
