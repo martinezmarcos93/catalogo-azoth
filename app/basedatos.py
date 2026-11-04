@@ -38,6 +38,9 @@ def _migrar(db):
     if "ejemplares" not in columnas:
         db.execute("ALTER TABLE libros ADD COLUMN ejemplares INTEGER NOT NULL DEFAULT 1")
         db.execute("UPDATE libros SET ejemplares = 0 WHERE vendido = 1")
+    for columna in ("portada", "pdf"):
+        if columna not in columnas:
+            db.execute(f"ALTER TABLE libros ADD COLUMN {columna} TEXT NOT NULL DEFAULT ''")
 
 
 def registrar_comandos(app):
@@ -242,6 +245,15 @@ def actualizar_libro(libro_id, datos):
     )
     if datos["ejemplares"] > 0:
         db.execute("DELETE FROM instagram_pendiente WHERE libro_id = ?", (libro_id,))
+    db.commit()
+
+
+def actualizar_archivo_libro(libro_id, campo, nombre):
+    """Anota el archivo de portada o PDF del libro ('' = quitarlo)."""
+    if campo not in ("portada", "pdf"):
+        raise ValueError(f"campo de archivo desconocido: {campo}")
+    db = obtener_conexion()
+    db.execute(f"UPDATE libros SET {campo} = ? WHERE id = ?", (nombre, libro_id))
     db.commit()
 
 

@@ -1,7 +1,7 @@
 import secrets
 from pathlib import Path
 
-from flask import Flask
+from flask import Flask, flash, redirect, url_for
 
 from . import basedatos as db
 from . import rutas, auth
@@ -28,6 +28,10 @@ def create_app(config_extra=None):
     app.config.from_mapping(
         SECRET_KEY=_clave_secreta(app.instance_path),
         DATABASE=str(Path(app.instance_path) / "azoth.db"),
+        ARCHIVOS=str(Path(app.instance_path) / "archivos"),
+        # Tope de una subida entera (PDF + portada + formulario). Los topes
+        # por tipo de archivo están en app/archivos.py.
+        MAX_CONTENT_LENGTH=170 * 1024 * 1024,
     )
     if config_extra:
         app.config.from_mapping(config_extra)
@@ -51,6 +55,11 @@ def create_app(config_extra=None):
         texto_post_instagram=texto_post_instagram,
         mensaje_consulta_instagram=mensaje_consulta_instagram,
     )
+
+    @app.errorhandler(413)
+    def archivo_demasiado_grande(e):
+        flash("El archivo es demasiado grande (PDF hasta 150 MB, portada hasta 15 MB).")
+        return redirect(url_for("rutas.catalogo"))
 
     @app.context_processor
     def inyectar_contexto_global():

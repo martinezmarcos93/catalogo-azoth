@@ -3,10 +3,11 @@ import io
 import time
 from datetime import timedelta
 
-from flask import Blueprint, Response, flash, redirect, render_template, request, url_for
+from flask import Blueprint, Response, abort, flash, redirect, render_template, request, send_file, url_for
 from openpyxl import load_workbook
 from werkzeug.security import check_password_hash, generate_password_hash
 
+from . import archivos
 from . import basedatos as db
 from .auth import verificar_sesion
 from .utilidades import (
@@ -113,14 +114,51 @@ def _datos_libro_de_formulario():
     }
 
 
+def _validar_archivos_de_formulario():
+    """Revisa la portada y el PDF que vinieron en el formulario, antes de
+    tocar la base. Devuelve ({campo: (archivo, extension)}, error)."""
+    nuevos = {}
+    for campo, validar in (("portada", archivos.validar_portada), ("pdf", archivos.validar_pdf)):
+        archivo = request.files.get(campo)
+        if not archivos.hay_archivo(archivo):
+            continue
+        try:
+            nuevos[campo] = (archivo, validar(archivo))
+        except archivos.ArchivoInvalido as e:
+            return {}, str(e)
+    return nuevos, None
+
+
+def _aplicar_archivos(libro_id, libro_anterior, nuevos, quitar=()):
+    """Guarda los archivos nuevos, quita los marcados y borra del disco
+    los que quedaron reemplazados."""
+    for campo in ("portada", "pdf"):
+        anterior = libro_anterior[campo] if libro_anterior else ""
+        if campo in nuevos:
+            archivo, extension = nuevos[campo]
+            nombre = archivos.crear_archivo(libro_id, campo, extension, archivo)
+        elif campo in quitar:
+            nombre = ""
+        else:
+            continue
+        db.actualizar_archivo_libro(libro_id, campo, nombre)
+        if anterior and anterior != nombre:
+            archivos.eliminar_archivo(anterior)
+
+
 @bp.route("/catalogo/crear", methods=["POST"])
 def crear_libro():
     datos = _datos_libro_de_formulario()
     if not datos["titulo"]:
         flash("Falta el título del libro.")
         return redirect(url_for("rutas.catalogo"))
+    nuevos, error = _validar_archivos_de_formulario()
+    if error:
+        flash(f"{error} El libro no se cargó.")
+        return redirect(url_for("rutas.catalogo"))
     datos["id"] = f"l{int(time.time() * 1000)}"
     db.crear_libro(datos)
+    _aplicar_archivos(datos["id"], None, nuevos)
     flash("Libro cargado: ya aparece en la vitrina.")
     return redirect(url_for("rutas.catalogo"))
 
@@ -134,19 +172,53 @@ def actualizar_libro(libro_id):
     if not datos["titulo"]:
         flash("Falta el título del libro.")
         return redirect(url_for("rutas.catalogo"))
+    nuevos, error = _validar_archivos_de_formulario()
+    if error:
+        flash(f"{error} No se guardaron los cambios.")
+        return redirect(url_for("rutas.catalogo"))
+    anterior = db.obtener_libro(libro_id)
     db.actualizar_libro(libro_id, datos)
+    quitar = [c for c in ("portada", "pdf") if request.form.get(f"quitar_{c}")]
+    _aplicar_archivos(libro_id, anterior, nuevos, quitar)
     flash("Libro actualizado.")
     return redirect(url_for("rutas.catalogo"))
 
 
 @bp.route("/catalogo/<libro_id>/eliminar", methods=["POST"])
 def eliminar_libro(libro_id):
+    libro = db.obtener_libro(libro_id)
     if db.eliminar_libro(libro_id):
+        if libro:
+            archivos.eliminar_archivo(libro["portada"])
+            archivos.eliminar_archivo(libro["pdf"])
         flash("Libro eliminado del catálogo.")
     else:
         flash("Ese libro tiene ventas registradas: no se puede borrar, "
               "queda en el catálogo como parte del historial.")
     return redirect(url_for("rutas.catalogo"))
+
+
+@bp.route("/catalogo/<libro_id>/portada")
+def portada_libro(libro_id):
+    libro = db.obtener_libro(libro_id)
+    ruta = archivos.obtener_ruta_archivo(libro["portada"]) if libro else None
+    if ruta is None:
+        abort(404)
+    extension = ruta.suffix.lstrip(".")
+    # La URL cambia con cada portada nueva (?v=nombre), así que se puede
+    # cachear en el navegador sin miedo a mostrar una vieja.
+    return send_file(ruta, mimetype=archivos.TIPOS_PORTADA.get(extension), max_age=31536000)
+
+
+@bp.route("/catalogo/<libro_id>/pdf")
+def pdf_libro(libro_id):
+    libro = db.obtener_libro(libro_id)
+    ruta = archivos.obtener_ruta_archivo(libro["pdf"]) if libro else None
+    if ruta is None:
+        abort(404)
+    nombre = "".join(c for c in libro["titulo"] if c.isalnum() or c in " -_").strip() or "libro"
+    return send_file(ruta, mimetype="application/pdf", download_name=f"{nombre}.pdf",
+                     as_attachment=request.args.get("descargar") == "1")
 
 
 @bp.route("/catalogo/planilla.csv")

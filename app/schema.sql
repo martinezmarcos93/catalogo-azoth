@@ -30,6 +30,9 @@ CREATE TABLE IF NOT EXISTS libros (
   nota TEXT DEFAULT '',
   -- ejemplares = stock que queda en el estante. vendido = 1 cuando llega a 0.
   ejemplares INTEGER NOT NULL DEFAULT 1,
+  -- nombres de archivo en instance/archivos/ ('' = sin portada / sin PDF)
+  portada TEXT NOT NULL DEFAULT '',
+  pdf TEXT NOT NULL DEFAULT '',
   vendido INTEGER NOT NULL DEFAULT 0
 );
 

@@ -22,7 +22,8 @@ CLAVE = "abcd"
 class BaseTest(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.mkdtemp()
-        self.app = create_app({"DATABASE": str(Path(self.tmp) / "t.db"), "TESTING": True})
+        self.app = create_app({"DATABASE": str(Path(self.tmp) / "t.db"),
+                               "ARCHIVOS": str(Path(self.tmp) / "archivos"), "TESTING": True})
         self.c = self.app.test_client()
         self.c.post("/primer-ingreso", data={"clave": CLAVE, "clave_repetida": CLAVE})
         self.c.get("/")  # consume el aviso de "Contraseña creada"
@@ -214,6 +215,110 @@ class TestImportar(BaseTest):
         self.assertEqual(libros["Sin columna"]["ejemplares"], 1)
 
 
+JPG = b"\xff\xd8\xff\xe0" + b"\x00" * 200
+PNG = b"\x89PNG\r\n\x1a\n" + b"\x00" * 200
+PDF = b"%PDF-1.4\n" + b"x" * 500 + b"\n%%EOF"
+CAMPOS = {"titulo": "Kybalion", "tema": "Hermetismo", "tipo": "Usado",
+          "estado": "Sin roturas, ni escritos", "precio": "15000", "ejemplares": "1"}
+
+
+class TestArchivos(BaseTest):
+    def enviar(self, ruta, **archivos_y_campos):
+        datos = dict(CAMPOS)
+        for clave, valor in archivos_y_campos.items():
+            datos[clave] = (io.BytesIO(valor[1]), valor[0]) if isinstance(valor, tuple) else valor
+        return self.c.post(ruta, data=datos, content_type="multipart/form-data",
+                           follow_redirects=True)
+
+    def carpeta(self):
+        return sorted(p.name for p in (Path(self.tmp) / "archivos").glob("*"))
+
+    def un_libro(self):
+        with self.app.app_context():
+            return db.listar_libros()[0]
+
+    def test_crear_con_portada_y_pdf(self):
+        self.enviar("/catalogo/crear", portada=("tapa.jpg", JPG), pdf=("libro.pdf", PDF))
+        b = self.un_libro()
+        self.assertTrue(b["portada"].endswith(".jpg"))
+        self.assertTrue(b["pdf"].endswith(".pdf"))
+        r = self.c.get(f"/catalogo/{b['id']}/portada")
+        self.assertEqual((r.status_code, r.mimetype, r.data), (200, "image/jpeg", JPG))
+        r.close()
+        r = self.c.get(f"/catalogo/{b['id']}/pdf")
+        self.assertEqual((r.status_code, r.mimetype, r.data), (200, "application/pdf", PDF))
+        r.close()
+        r = self.c.get(f"/catalogo/{b['id']}/pdf?descargar=1")
+        self.assertIn("attachment", r.headers["Content-Disposition"])
+        r.close()
+        html = self.c.get("/vitrina").get_data(as_text=True)
+        self.assertIn(f"/catalogo/{b['id']}/portada", html)
+        self.assertNotIn(f"/catalogo/{b['id']}/pdf", html)  # el PDF no se muestra al cliente
+
+    def test_el_tipo_se_reconoce_por_el_contenido(self):
+        r = self.enviar("/catalogo/crear", portada=("virus.jpg", b"MZ\x90\x00" + b"\x00" * 100))
+        self.assertIn("tiene que ser una foto", r.get_data(as_text=True))
+        with self.app.app_context():
+            self.assertEqual(db.listar_libros(), [])  # no se cargó el libro a medias
+        r = self.enviar("/catalogo/crear", pdf=("falso.pdf", JPG))
+        self.assertIn("no es un PDF", r.get_data(as_text=True))
+        self.assertEqual(self.carpeta(), [])
+
+    def test_png_queda_como_png_aunque_se_llame_jpg(self):
+        self.enviar("/catalogo/crear", portada=("foto.jpg", PNG))
+        self.assertTrue(self.un_libro()["portada"].endswith(".png"))
+
+    def test_reemplazar_borra_el_archivo_viejo(self):
+        self.enviar("/catalogo/crear", portada=("a.jpg", JPG))
+        b = self.un_libro()
+        self.enviar(f"/catalogo/{b['id']}/actualizar", portada=("b.png", PNG))
+        nuevo = self.un_libro()["portada"]
+        self.assertNotEqual(nuevo, b["portada"])
+        self.assertEqual(self.carpeta(), [nuevo])
+
+    def test_editar_sin_archivo_no_toca_lo_cargado(self):
+        self.enviar("/catalogo/crear", portada=("a.jpg", JPG), pdf=("l.pdf", PDF))
+        b = self.un_libro()
+        self.enviar(f"/catalogo/{b['id']}/actualizar", precio="20000")
+        despues = self.un_libro()
+        self.assertEqual((despues["portada"], despues["pdf"]), (b["portada"], b["pdf"]))
+        self.assertEqual(despues["precio"], 20000)
+
+    def test_quitar_portada_y_pdf(self):
+        self.enviar("/catalogo/crear", portada=("a.jpg", JPG), pdf=("l.pdf", PDF))
+        b = self.un_libro()
+        self.enviar(f"/catalogo/{b['id']}/actualizar", quitar_portada="on", quitar_pdf="on")
+        despues = self.un_libro()
+        self.assertEqual((despues["portada"], despues["pdf"]), ("", ""))
+        self.assertEqual(self.carpeta(), [])
+        self.assertEqual(self.c.get(f"/catalogo/{b['id']}/portada").status_code, 404)
+
+    def test_borrar_libro_borra_sus_archivos(self):
+        self.enviar("/catalogo/crear", portada=("a.jpg", JPG), pdf=("l.pdf", PDF))
+        self.c.post(f"/catalogo/{self.un_libro()['id']}/eliminar")
+        self.assertEqual(self.carpeta(), [])
+
+    def test_archivos_protegidos_por_login(self):
+        self.enviar("/catalogo/crear", portada=("a.jpg", JPG), pdf=("l.pdf", PDF))
+        lid = self.un_libro()["id"]
+        anonimo = self.app.test_client()
+        for tipo in ("portada", "pdf"):
+            r = anonimo.get(f"/catalogo/{lid}/{tipo}")
+            self.assertEqual(r.status_code, 302)
+            self.assertIn("/login", r.headers["Location"])
+
+    def test_archivo_demasiado_grande(self):
+        self.app.config["MAX_CONTENT_LENGTH"] = 1000
+        r = self.enviar("/catalogo/crear", pdf=("l.pdf", PDF + b"x" * 2000))
+        self.assertIn("demasiado grande", r.get_data(as_text=True))
+
+    def test_pantallas_con_portada_cargan(self):
+        self.enviar("/catalogo/crear", portada=("a.jpg", JPG), pdf=("l.pdf", PDF))
+        for ruta in ("/", "/catalogo", "/vitrina", "/ventas"):
+            with self.subTest(ruta=ruta):
+                self.assertEqual(self.c.get(ruta).status_code, 200)
+
+
 class TestMigracion(unittest.TestCase):
     def test_base_vieja_sin_columna_ejemplares(self):
         tmp = tempfile.mkdtemp()
@@ -221,6 +326,9 @@ class TestMigracion(unittest.TestCase):
         con = sqlite3.connect(ruta)
         esquema_viejo = (RAIZ / "app/schema.sql").read_text(encoding="utf-8")
         esquema_viejo = esquema_viejo.replace("  ejemplares INTEGER NOT NULL DEFAULT 1,\n", "")
+        esquema_viejo = esquema_viejo.replace("  portada TEXT NOT NULL DEFAULT '',\n", "")
+        esquema_viejo = esquema_viejo.replace("  pdf TEXT NOT NULL DEFAULT '',\n", "")
+        self.assertNotIn("portada TEXT", esquema_viejo)
         con.executescript(esquema_viejo)
         con.execute("INSERT INTO libros (id, nro, titulo, tema, tipo, estado, vendido) "
                     "VALUES ('a', 1, 'Vendido', 'Tarot', 'Usado', 'x', 1), "
@@ -230,6 +338,7 @@ class TestMigracion(unittest.TestCase):
         with app.app_context():
             self.assertEqual(db.obtener_libro("a")["ejemplares"], 0)
             self.assertEqual(db.obtener_libro("b")["ejemplares"], 1)
+            self.assertEqual(db.obtener_libro("b")["portada"], "")
         shutil.rmtree(tmp, ignore_errors=True)
 
 

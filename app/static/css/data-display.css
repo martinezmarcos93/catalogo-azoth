@@ -30,6 +30,8 @@ td.r,th.r{text-align:right}
 .cover .ce{display:flex;justify-content:center;width:100%}
 .cover .ce svg{width:34%;height:auto;min-width:18px;opacity:.85}
 .cover .fn{position:absolute;left:0;right:0;bottom:2.6%;text-align:center;color:var(--text-2)}
+.cover img.foto{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+.cover img.foto ~ .fn{background:rgba(16,17,20,.72);color:var(--text);padding:2px 0}
 .cover.mini{flex:none;width:34px;height:48px;border-radius:2px 3px 3px 2px}
 .mini .in{inset:10%;padding:0;justify-content:center}
 .mini .ct,.mini .ca{display:none}

@@ -31,5 +31,9 @@
   <label>Precio ($)<input name="precio" type="number" min="0" step="1000" value="{{ libro.precio if libro else '' }}" required></label>
   <label>Ejemplares en stock<input name="ejemplares" type="number" min="0" step="1" value="{{ libro.ejemplares if libro else 1 }}" required></label>
   <label class="check"><input name="ilustrado" type="checkbox" {{ 'checked' if libro and libro.ilustrado }}> Ilustrado</label>
+  <label class="full">Portada (foto JPG, PNG o WEBP, hasta 15 MB)<input name="portada" type="file" accept="image/jpeg,image/png,image/webp"></label>
+  {% if libro and libro.portada %}<label class="check full"><input name="quitar_portada" type="checkbox"> Quitar la portada actual (vuelve el dibujo del tema)</label>{% endif %}
+  <label class="full">PDF del libro (hasta 150 MB)<input name="pdf" type="file" accept="application/pdf,.pdf"></label>
+  {% if libro and libro.pdf %}<label class="check full"><input name="quitar_pdf" type="checkbox"> Quitar el PDF actual · <a href="{{ url_for('rutas.pdf_libro', libro_id=libro.id) }}" target="_blank" rel="noopener">ver el que está cargado</a></label>{% endif %}
   <label class="full">Detalle del ejemplar<input name="nota" value="{{ libro.nota if libro else '' }}" placeholder="Ej.: 1ra edición en español, sello de biblioteca"></label>
 </div>

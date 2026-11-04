@@ -73,8 +73,25 @@ Usan una base temporal: no tocan `instance/azoth.db`.
 
 ## Datos
 
-Todo vive en `instance/azoth.db` (SQLite, no se sube al repositorio). Para
-hacer backup alcanza con copiar ese archivo. La base arranca vacía.
+Todo vive en la carpeta `instance/` (no se sube al repositorio):
+`azoth.db` (SQLite) y `archivos/` (portadas y PDFs). **Para hacer backup hay
+que copiar la carpeta `instance/` entera**: copiar solo la base deja afuera
+las portadas y los PDFs. La base arranca vacía.
+
+### Portadas y PDF de cada libro
+
+Al cargar o editar un libro se puede subir:
+
+- **Portada**: foto JPG, PNG o WEBP, hasta 15 MB (desde el celular se puede
+  sacar la foto en el momento). Reemplaza al dibujo del tema en el Catálogo,
+  la Vitrina y el Panel.
+- **PDF del libro**: hasta 150 MB. Es de uso interno: aparece como botón
+  "PDF" en el Catálogo, nunca en la Vitrina.
+
+El tipo de archivo se reconoce por su contenido, no por la extensión. Los
+archivos se sirven solo con la sesión iniciada. Subir uno nuevo reemplaza
+(y borra) el anterior; en Editar también se pueden quitar. Al borrar un
+libro se borran sus archivos.
 
 ### Cargar el catálogo por lote (planilla Excel)
 
@@ -138,6 +155,7 @@ cuando quiera, sin tocar código.
 app/
   __init__.py        fábrica de la app, registra blueprints y filtros Jinja
   auth.py            login, primer ingreso, logout
+  archivos.py        portadas y PDFs en disco: validación por contenido, guardado y borrado
   basedatos.py        capa de datos (sqlite3 directo, verbos en español)
   rutas.py            todas las vistas: panel, catálogo, vitrina, ventas, turnos, calculadora, configuración
   utilidades.py        formato de moneda/fecha, glifos y tonos por tema, texto de posts de Instagram
@@ -153,7 +171,7 @@ tests/
   test_app.py         tests de punta a punta (unittest, sin dependencias extra)
 scripts/
   generar_plantilla_catalogo.py   regenera la plantilla de Excel si cambian las columnas
-instance/              azoth.db (no versionado) + clave secreta de sesión (no versionada)
+instance/              azoth.db + archivos/ (portadas y PDFs) + clave secreta de sesión — nada de esto se versiona
 legado/                 el artefacto HTML de un solo archivo de la versión anterior, como referencia
 ```
 
@@ -161,4 +179,7 @@ legado/                 el artefacto HTML de un solo archivo de la versión ante
 
 - Cloudflare Tunnel si se necesita acceso fuera del WiFi del local
   (antes, cerrar la redirección abierta del login: hoy acepta `siguiente=//otro-sitio`).
+- Achicar las fotos de portada al subirlas (hoy se guardan tal cual; con
+  muchos libros y fotos de celular, el catálogo puede cargar lento en el
+  teléfono). Requiere Pillow → pasar antes por dependency-auditor.
 - Hacer configurable el horario que usa el cálculo de "abierto ahora".
