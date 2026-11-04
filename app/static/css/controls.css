@@ -8,7 +8,7 @@
 .btn.ghost{background:transparent;color:var(--text);border-color:var(--steel)}
 .btn.ghost:hover{background:var(--surface-raised);border-color:var(--bone)}
 .btn.sm{padding:var(--sp-1) var(--sp-3);font-size:var(--fs-sm)}
-.btn.danger{border-color:var(--state-alert-edge);color:var(--bone)}
+.btn.danger{background:transparent;border-color:var(--state-alert-edge);color:var(--bone)}
 .btn.danger:hover{background:var(--state-alert)}
 .link{display:inline-flex;align-items:center;gap:var(--sp-2);padding:0;border:0;background:none;color:var(--text);font-size:14.5px;text-decoration:underline;text-decoration-color:var(--steel);text-underline-offset:3px;cursor:pointer}
 .link:hover{text-decoration-color:var(--bone)}

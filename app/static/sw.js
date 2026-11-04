@@ -2,7 +2,7 @@
 // para que la app cargue rápido e instale como PWA. El HTML, los formularios
 // y cualquier dato (libros, ventas, turnos) siempre van a la red: son datos
 // vivos y protegidos por login, no tiene sentido ni es seguro cachearlos.
-const CACHE = "azoth-estatico-v2"; // subir el número cada vez que cambie un CSS
+const CACHE = "azoth-estatico-v3"; // subir el número cada vez que cambie un CSS
 const ESTATICOS = [
   "/static/css/design-tokens.css",
   "/static/css/typography.css",

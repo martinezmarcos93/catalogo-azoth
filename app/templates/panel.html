@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% import "_macros.html" as m %}
 {% block titulo %}Panel{% endblock %}
 {% block content %}
 <section>
@@ -34,7 +35,7 @@
       <ul class="list">
         {% for venta, libro in ultimas_ventas %}
         <li>
-          <div class="cover mini" style="background:{{ tono(libro.tema if libro else '') }}"><div class="in"><span class="ce">{{ glifo(libro.tema if libro else '') | safe }}</span></div></div>
+          {% if libro %}{{ m.cover(libro, mini=True) }}{% else %}<div class="cover mini" style="background:{{ tono('') }}"><div class="in"><span class="ce">{{ glifo('') | safe }}</span></div></div>{% endif %}
           <span class="grow"><span class="li-t">{{ libro.titulo if libro else '(borrado)' }}</span><span class="li-m"><span class="num">{{ venta.fecha | fecha_corta }}</span><span>{{ venta.medio }}</span></span></span>
           <span class="amt num">{{ venta.precio | money }}</span>
         </li>
