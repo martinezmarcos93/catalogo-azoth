@@ -18,6 +18,12 @@ Abadía — "Silvio Caveira" en redes —, Bolívar 1447, San Telmo). Pensado pa
 
 ## Instalación
 
+**En la PC del local (Windows): seguir [`docs/instalacion-windows.md`](docs/instalacion-windows.md)**
+— instalación paso a paso, arranque automático, celular, backup, restauración
+y actualización, con los `.bat` de `scripts/windows/`.
+
+Instalación manual (para desarrollo):
+
 ```bash
 py -m venv .venv
 .venv\Scripts\python.exe -m pip install -r requirements.txt
@@ -76,7 +82,9 @@ Usan una base temporal: no tocan `instance/azoth.db`.
 Todo vive en la carpeta `instance/` (no se sube al repositorio):
 `azoth.db` (SQLite) y `archivos/` (portadas y PDFs). **Para hacer backup hay
 que copiar la carpeta `instance/` entera**: copiar solo la base deja afuera
-las portadas y los PDFs. La base arranca vacía.
+las portadas y los PDFs. `python scripts/crear_backup.py [destino]` lo hace
+solo (copia segura de la base aunque el sistema esté abierto + archivos);
+en Windows, `scripts/windows/backup-azoth.bat`. La base arranca vacía.
 
 ### Portadas y PDF de cada libro
 
@@ -170,6 +178,8 @@ app/
 tests/
   test_app.py         tests de punta a punta (unittest, sin dependencias extra)
 scripts/
+  crear_backup.py      backup de instance/ (base con la API de backup de SQLite + archivos)
+  windows/             instalar-azoth.bat, iniciar-azoth.bat, backup-azoth.bat
   generar_plantilla_catalogo.py   regenera la plantilla de Excel si cambian las columnas
 instance/              azoth.db + archivos/ (portadas y PDFs) + clave secreta de sesión — nada de esto se versiona
 legado/                 el artefacto HTML de un solo archivo de la versión anterior, como referencia
