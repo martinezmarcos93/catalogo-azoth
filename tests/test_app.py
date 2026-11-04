@@ -319,6 +319,31 @@ class TestArchivos(BaseTest):
                 self.assertEqual(self.c.get(ruta).status_code, 200)
 
 
+class TestBackup(BaseTest):
+    def test_backup_copia_base_y_archivos_con_el_sistema_abierto(self):
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("crear_backup", RAIZ / "scripts/crear_backup.py")
+        modulo = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(modulo)
+
+        datos = dict(CAMPOS)
+        datos["portada"] = (io.BytesIO(JPG), "tapa.jpg")
+        self.c.post("/catalogo/crear", data=datos, content_type="multipart/form-data")
+        # el backup espera la estructura real de instance/: base + archivos/
+        instance = Path(self.tmp)
+        (instance / "t.db").rename(instance / "azoth.db")
+        conexion_abierta = sqlite3.connect(instance / "azoth.db")  # simula el sistema corriendo
+        modulo.INSTANCE = instance
+        destino, cantidad = modulo.crear_backup(instance / "backups")
+        conexion_abierta.close()
+
+        self.assertEqual(cantidad, 1)
+        copia = sqlite3.connect(destino / "azoth.db")
+        titulos = [f[0] for f in copia.execute("SELECT titulo FROM libros")]
+        copia.close()
+        self.assertEqual(titulos, ["Kybalion"])
+
+
 class TestMigracion(unittest.TestCase):
     def test_base_vieja_sin_columna_ejemplares(self):
         tmp = tempfile.mkdtemp()
