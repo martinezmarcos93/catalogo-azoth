@@ -27,7 +27,17 @@ def inicializar_esquema():
     db = obtener_conexion()
     esquema = Path(__file__).with_name("schema.sql").read_text(encoding="utf-8")
     db.executescript(esquema)
+    _migrar(db)
     db.commit()
+
+
+def _migrar(db):
+    """Cambios de esquema sobre bases ya creadas (CREATE TABLE IF NOT EXISTS
+    no agrega columnas nuevas a una tabla que ya existe)."""
+    columnas = {f["name"] for f in db.execute("PRAGMA table_info(libros)")}
+    if "ejemplares" not in columnas:
+        db.execute("ALTER TABLE libros ADD COLUMN ejemplares INTEGER NOT NULL DEFAULT 1")
+        db.execute("UPDATE libros SET ejemplares = 0 WHERE vendido = 1")
 
 
 def registrar_comandos(app):
@@ -100,7 +110,7 @@ def actualizar_configuracion(clave, valor):
 
 
 _CONFIG_SITIO_DEFAULTS = {
-    "whatsapp_numero": "",
+    "whatsapp_numero": "5491137869154",
     "direccion": "Bolívar 1447, San Telmo",
     "horario_texto": "14 a 19 h · martes y domingo cerrado",
 }
@@ -115,8 +125,19 @@ def obtener_config_sitio():
 
 # ---------- cuentas de Instagram (pueden ser varias: librería, tatuajes, etc.) ----------
 
+# Cuentas reales de Azoth. Se usan mientras no se haya guardado ninguna lista
+# desde Configuración; la primera es la que usa la Vitrina.
+_INSTAGRAM_DEFAULTS = [
+    {"id": 1, "etiqueta": "Librería", "usuario": "azothlibreria"},
+    {"id": 2, "etiqueta": "Tatuajes · Solar Estudio", "usuario": "solarestudioba"},
+    {"id": 3, "etiqueta": "Silvio", "usuario": "silviocaveira"},
+]
+
+
 def listar_instagram_cuentas():
-    crudo = obtener_configuracion("instagram_cuentas", "")
+    crudo = obtener_configuracion("instagram_cuentas", None)
+    if crudo is None:
+        return [dict(c) for c in _INSTAGRAM_DEFAULTS]
     if not crudo:
         return []
     try:
@@ -191,12 +212,14 @@ def crear_libro(datos):
     db = obtener_conexion()
     datos = dict(datos)
     datos["nro"] = siguiente_nro_libro()
+    datos["ejemplares"] = max(0, datos.get("ejemplares", 1) or 0)
     db.execute(
         """INSERT INTO libros
            (id, nro, titulo, autor, editorial, anio, pais, tapa, paginas,
-            tema, tipo, estado, precio, ilustrado, nota, vendido)
+            tema, tipo, estado, precio, ilustrado, nota, ejemplares, vendido)
            VALUES (:id, :nro, :titulo, :autor, :editorial, :anio, :pais, :tapa,
-                   :paginas, :tema, :tipo, :estado, :precio, :ilustrado, :nota, 0)""",
+                   :paginas, :tema, :tipo, :estado, :precio, :ilustrado, :nota,
+                   :ejemplares, :ejemplares = 0)""",
         datos,
     )
     db.commit()
@@ -204,33 +227,46 @@ def crear_libro(datos):
 
 
 def actualizar_libro(libro_id, datos):
+    """Actualiza los datos del libro, incluido el stock: si se repone
+    (ejemplares > 0) el libro vuelve a estar disponible en la vitrina."""
     db = obtener_conexion()
     datos = dict(datos, id=libro_id)
+    datos["ejemplares"] = max(0, datos.get("ejemplares", 1) or 0)
     db.execute(
         """UPDATE libros SET titulo=:titulo, autor=:autor, editorial=:editorial,
            anio=:anio, pais=:pais, tapa=:tapa, paginas=:paginas, tema=:tema,
            tipo=:tipo, estado=:estado, precio=:precio, ilustrado=:ilustrado,
-           nota=:nota WHERE id=:id""",
+           nota=:nota, ejemplares=:ejemplares, vendido=(:ejemplares = 0)
+           WHERE id=:id""",
         datos,
     )
+    if datos["ejemplares"] > 0:
+        db.execute("DELETE FROM instagram_pendiente WHERE libro_id = ?", (libro_id,))
     db.commit()
 
 
+def tiene_ventas(libro_id):
+    db = obtener_conexion()
+    return db.execute(
+        "SELECT 1 FROM ventas WHERE libro_id = ? LIMIT 1", (libro_id,)
+    ).fetchone() is not None
+
+
+def listar_ids_libros_con_ventas():
+    db = obtener_conexion()
+    return {f["libro_id"] for f in db.execute("SELECT DISTINCT libro_id FROM ventas")}
+
+
 def eliminar_libro(libro_id):
+    """Borra un libro que nunca se vendió. Un libro con ventas no se borra:
+    las ventas son el registro histórico. Devuelve False si no se borró."""
+    if tiene_ventas(libro_id):
+        return False
     db = obtener_conexion()
     db.execute("DELETE FROM instagram_pendiente WHERE libro_id = ?", (libro_id,))
     db.execute("DELETE FROM libros WHERE id = ?", (libro_id,))
     db.commit()
-
-
-def marcar_vendido(libro_id):
-    db = obtener_conexion()
-    db.execute("UPDATE libros SET vendido = 1 WHERE id = ?", (libro_id,))
-    db.execute(
-        "INSERT OR IGNORE INTO instagram_pendiente (libro_id) VALUES (?)",
-        (libro_id,),
-    )
-    db.commit()
+    return True
 
 
 # ---------- avisos pendientes de Instagram ----------
@@ -283,21 +319,46 @@ def listar_ventas_del_mes(anio, mes):
 
 
 def crear_venta(fecha, libro_id, medio, entrega, precio):
+    """Registra la venta de un ejemplar y descuenta el stock, todo en una
+    sola transacción. Devuelve el id de la venta, o None si no quedaban
+    ejemplares (no se registra nada). Al vender el último ejemplar el libro
+    queda VENDIDO y pendiente de marcar en el post de Instagram."""
     db = obtener_conexion()
-    cursor = db.execute(
-        "INSERT INTO ventas (fecha, libro_id, medio, entrega, precio) "
-        "VALUES (?, ?, ?, ?, ?)",
-        (fecha, libro_id, medio, entrega, precio),
-    )
-    db.commit()
-    marcar_vendido(libro_id)
-    return cursor.lastrowid
+    with db:
+        cursor = db.execute(
+            "UPDATE libros SET ejemplares = ejemplares - 1, vendido = (ejemplares - 1 = 0) "
+            "WHERE id = ? AND ejemplares > 0",
+            (libro_id,),
+        )
+        if cursor.rowcount == 0:
+            return None
+        cursor = db.execute(
+            "INSERT INTO ventas (fecha, libro_id, medio, entrega, precio) "
+            "VALUES (?, ?, ?, ?, ?)",
+            (fecha, libro_id, medio, entrega, precio),
+        )
+        venta_id = cursor.lastrowid
+        db.execute(
+            "INSERT OR IGNORE INTO instagram_pendiente (libro_id) "
+            "SELECT id FROM libros WHERE id = ? AND ejemplares = 0",
+            (libro_id,),
+        )
+    return venta_id
 
 
 def eliminar_venta(venta_id):
+    """Anula una venta cargada por error: el ejemplar vuelve al estante."""
     db = obtener_conexion()
-    db.execute("DELETE FROM ventas WHERE id = ?", (venta_id,))
-    db.commit()
+    venta = obtener_venta(venta_id)
+    if venta is None:
+        return
+    with db:
+        db.execute("DELETE FROM ventas WHERE id = ?", (venta_id,))
+        db.execute(
+            "UPDATE libros SET ejemplares = ejemplares + 1, vendido = 0 WHERE id = ?",
+            (venta["libro_id"],),
+        )
+        db.execute("DELETE FROM instagram_pendiente WHERE libro_id = ?", (venta["libro_id"],))
 
 
 # ---------- turnos ----------

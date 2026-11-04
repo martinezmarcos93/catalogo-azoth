@@ -28,6 +28,8 @@ CREATE TABLE IF NOT EXISTS libros (
   precio INTEGER NOT NULL DEFAULT 0,
   ilustrado INTEGER NOT NULL DEFAULT 0,
   nota TEXT DEFAULT '',
+  -- ejemplares = stock que queda en el estante. vendido = 1 cuando llega a 0.
+  ejemplares INTEGER NOT NULL DEFAULT 1,
   vendido INTEGER NOT NULL DEFAULT 0
 );
 

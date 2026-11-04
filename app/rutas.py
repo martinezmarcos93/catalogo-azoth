@@ -11,7 +11,7 @@ from . import basedatos as db
 from .auth import verificar_sesion
 from .utilidades import (
     DIAS, ENTREGAS, ESTADOS, MEDIOS_PAGO, MESES, TEMAS, TIPOS,
-    fila_planilla_a_libro, hoy_argentina, money,
+    fecha_valida, fila_planilla_a_libro, hora_valida, hoy_argentina, money,
 )
 
 bp = Blueprint("rutas", __name__)
@@ -59,7 +59,7 @@ def panel():
         vendido_mes=money(sum(v["precio"] for v in ventas_mes)),
         libros_mes=len(ventas_mes),
         disponibles=len(disponibles),
-        valor_estante=money(sum(b["precio"] for b in disponibles)),
+        valor_estante=money(sum(b["precio"] * b["ejemplares"] for b in disponibles)),
         turnos_futuros=len(futuros),
         ultimas_ventas=ultimas_ventas,
         proximos_turnos=proximos_turnos,
@@ -88,6 +88,7 @@ def catalogo():
         "catalogo.html",
         libros=libros,
         total=len(todos),
+        con_ventas=db.listar_ids_libros_con_ventas(),
         q=q, tema=tema, tipo=tipo, disp=disp,
         TEMAS=TEMAS, TIPOS=TIPOS, ESTADOS=ESTADOS,
     )
@@ -108,6 +109,7 @@ def _datos_libro_de_formulario():
         "precio": max(0, _entero(request.form.get("precio"), 0)),
         "ilustrado": 1 if request.form.get("ilustrado") else 0,
         "nota": request.form.get("nota", "").strip(),
+        "ejemplares": max(0, _entero(request.form.get("ejemplares"), 1)),
     }
 
 
@@ -139,15 +141,18 @@ def actualizar_libro(libro_id):
 
 @bp.route("/catalogo/<libro_id>/eliminar", methods=["POST"])
 def eliminar_libro(libro_id):
-    db.eliminar_libro(libro_id)
-    flash("Libro eliminado del catálogo.")
+    if db.eliminar_libro(libro_id):
+        flash("Libro eliminado del catálogo.")
+    else:
+        flash("Ese libro tiene ventas registradas: no se puede borrar, "
+              "queda en el catálogo como parte del historial.")
     return redirect(url_for("rutas.catalogo"))
 
 
 @bp.route("/catalogo/planilla.csv")
 def catalogo_csv():
     columnas = ["nro", "titulo", "autor", "editorial", "anio", "pais", "tapa",
-                "paginas", "tema", "tipo", "estado", "precio", "vendido"]
+                "paginas", "tema", "tipo", "estado", "precio", "ejemplares", "vendido"]
     buffer = io.StringIO()
     escritor = csv.writer(buffer, delimiter=";")
     escritor.writerow(columnas)
@@ -266,21 +271,28 @@ def crear_venta():
         flash("Elegí un libro del listado.")
         return redirect(url_for("rutas.ventas"))
     precio = max(0, _entero(request.form.get("precio"), 0))
-    db.crear_venta(
+    venta_id = db.crear_venta(
         hoy_argentina().isoformat(),
         libro_id,
         request.form.get("medio", MEDIOS_PAGO[0]),
         request.form.get("entrega", ENTREGAS[0]),
         precio,
     )
-    flash("Venta registrada · falta marcar VENDIDO en el post.")
+    if venta_id is None:
+        flash("No quedan ejemplares de ese libro: la venta no se registró.")
+        return redirect(url_for("rutas.ventas"))
+    libro = db.obtener_libro(libro_id)
+    if libro["ejemplares"] == 0:
+        flash("Venta registrada · era el último ejemplar: falta marcar VENDIDO en el post.")
+    else:
+        flash(f"Venta registrada · quedan {libro['ejemplares']} ejemplares.")
     return redirect(url_for("rutas.ventas"))
 
 
 @bp.route("/ventas/<int:venta_id>/eliminar", methods=["POST"])
 def eliminar_venta(venta_id):
     db.eliminar_venta(venta_id)
-    flash("Venta eliminada.")
+    flash("Venta anulada: el ejemplar volvió al estante.")
     return redirect(url_for("rutas.ventas"))
 
 
@@ -339,11 +351,22 @@ def _datos_turno_de_formulario():
     }
 
 
+def _error_turno(datos):
+    if not (datos["fecha"] and datos["cliente"] and datos["diseno"]):
+        return "Faltan datos del turno."
+    if not fecha_valida(datos["fecha"]):
+        return "La fecha del turno no es válida."
+    if not hora_valida(datos["hora"]):
+        return "La hora del turno no es válida (tiene que ser HH:MM)."
+    return None
+
+
 @bp.route("/turnos/crear", methods=["POST"])
 def crear_turno():
     datos = _datos_turno_de_formulario()
-    if not (datos["fecha"] and datos["cliente"] and datos["diseno"]):
-        flash("Faltan datos del turno.")
+    error = _error_turno(datos)
+    if error:
+        flash(error)
         return redirect(url_for("rutas.turnos"))
     db.crear_turno(datos)
     flash("Turno agendado.")
@@ -356,6 +379,10 @@ def actualizar_turno(turno_id):
         flash("Ese turno ya no existe.")
         return redirect(url_for("rutas.turnos"))
     datos = _datos_turno_de_formulario()
+    error = _error_turno(datos)
+    if error:
+        flash(error)
+        return redirect(url_for("rutas.turnos"))
     db.actualizar_turno(turno_id, datos)
     flash("Turno actualizado.")
     return redirect(url_for("rutas.turnos"))

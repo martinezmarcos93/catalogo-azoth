@@ -79,7 +79,10 @@ def precio_o_consultar(libro):
 
 
 def fecha_corta(fecha_iso):
-    x = date.fromisoformat(fecha_iso)
+    try:
+        x = date.fromisoformat(fecha_iso)
+    except (TypeError, ValueError):
+        return str(fecha_iso or "")
     return f"{DIAS[(x.weekday() + 1) % 7]} {x.day} {MESES[x.month - 1]}"
 
 
@@ -148,12 +151,14 @@ def _entero_o_none(valor):
 
 
 def fila_planilla_a_libro(valores):
-    """Convierte una fila de la planilla de importación (13 columnas, en el
+    """Convierte una fila de la planilla de importación (14 columnas, en el
     orden de scripts/generar_plantilla_catalogo.py) en un dict listo para
-    basedatos.crear_libro. Devuelve None si no hay título (fila vacía)."""
-    columnas = (list(valores) + [None] * 13)[:13]
+    basedatos.crear_libro. Devuelve None si no hay título (fila vacía).
+    Ejemplares va al final para que las planillas viejas de 13 columnas
+    sigan sirviendo: si está vacío, se toma 1."""
+    columnas = (list(valores) + [None] * 14)[:14]
     (titulo, autor, editorial, anio, pais, tapa, paginas, tema, tipo,
-     estado, precio, ilustrado, nota) = columnas
+     estado, precio, ilustrado, nota, ejemplares) = columnas
 
     titulo = str(titulo).strip() if titulo else ""
     if not titulo:
@@ -175,7 +180,26 @@ def fila_planilla_a_libro(valores):
         "precio": max(0, _entero_o_none(precio) or 0),
         "ilustrado": 1 if ilustrado_texto in ("sí", "si", "true", "1") else 0,
         "nota": str(nota or "").strip(),
+        "ejemplares": max(0, _entero_o_none(ejemplares) if _entero_o_none(ejemplares) is not None else 1),
     }
+
+
+def fecha_valida(texto):
+    """True si es una fecha AAAA-MM-DD real (lo que manda <input type=date>)."""
+    try:
+        date.fromisoformat(texto)
+        return len(texto) == 10
+    except (TypeError, ValueError):
+        return False
+
+
+def hora_valida(texto):
+    """True si es una hora HH:MM entre 00:00 y 23:59."""
+    try:
+        datetime.strptime(texto, "%H:%M")
+        return len(texto) == 5
+    except (TypeError, ValueError):
+        return False
 
 
 def mensaje_consulta_instagram(libro):

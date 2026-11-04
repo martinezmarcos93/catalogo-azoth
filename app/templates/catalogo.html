@@ -45,7 +45,7 @@
         <td>{{ b.editorial }}<div class="t-sub num">{{ b.anio or '' }} · {{ b.pais }}</div></td>
         <td>{{ m.tipo_chip(b) }}</td>
         <td class="t-sub">{{ b.estado }}</td>
-        <td class="r num">{% if b.vendido %}<span class="chip sold">Vendido</span>{% else %}{{ precio_o_consultar(b) }}{% endif %}</td>
+        <td class="r num">{% if b.vendido %}<span class="chip sold">Vendido</span>{% else %}{{ precio_o_consultar(b) }}{% if b.ejemplares > 1 %}<div class="t-sub">{{ b.ejemplares }} ejemplares</div>{% endif %}{% endif %}</td>
         <td class="r" style="white-space:nowrap">
           <button class="btn ghost sm" type="button" onclick="document.getElementById('dlg-ig-{{ b.id }}').showModal()" title="Texto para Instagram"><i data-lucide="instagram"></i>Post</button>
           <button class="btn ghost sm" type="button" onclick="document.getElementById('dlg-editar-{{ b.id }}').showModal()" aria-label="Editar"><i data-lucide="pencil"></i></button>
@@ -73,7 +73,7 @@
     <h2>Editar libro</h2>
     {% include "_form_libro.html" with context %}
     <div class="end"><button class="btn ghost" type="button" onclick="this.closest('dialog').close()">Cancelar</button>
-      <button class="btn danger" type="submit" formaction="{{ url_for('rutas.eliminar_libro', libro_id=b.id) }}" onclick="return confirm('¿Eliminar este libro del catálogo?')">Eliminar</button>
+      {% if b.id not in con_ventas %}<button class="btn danger" type="submit" formaction="{{ url_for('rutas.eliminar_libro', libro_id=b.id) }}" onclick="return confirm('¿Eliminar este libro del catálogo?')">Eliminar</button>{% endif %}
       <button class="btn" type="submit">Guardar</button></div>
   </form>
 </dialog>

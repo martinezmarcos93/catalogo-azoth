@@ -3,7 +3,7 @@
 {% block content %}
 <section>
   <div class="head">
-    <div><span class="kicker">Folio IV</span><h1>Ventas</h1><p>Cada venta marca el libro como vendido y deja pendiente el aviso en el post.</p></div>
+    <div><span class="kicker">Folio IV</span><h1>Ventas</h1><p>Cada venta descuenta un ejemplar; al vender el último, el libro queda vendido y pendiente el aviso en el post.</p></div>
     <div class="actions"><button class="btn" type="button" onclick="document.getElementById('dlg-venta').showModal()"><i data-lucide="plus"></i>Registrar venta</button></div>
   </div>
 
@@ -44,7 +44,7 @@
         <td>{{ v.entrega }}</td>
         <td class="r num">{{ v.precio | money }}</td>
         <td class="r">
-          <form method="post" action="{{ url_for('rutas.eliminar_venta', venta_id=v.id) }}" onsubmit="return confirm('¿Eliminar esta venta? El libro queda como vendido igual.')">
+          <form method="post" action="{{ url_for('rutas.eliminar_venta', venta_id=v.id) }}" onsubmit="return confirm('¿Anular esta venta? El ejemplar vuelve al estante.')">
             <button class="btn ghost sm" type="submit" aria-label="Eliminar"><i data-lucide="trash-2"></i></button>
           </form>
         </td>
@@ -63,7 +63,7 @@
       <label class="full">Libro
         <select name="libro_id" onchange="document.getElementById('s-precio').value=this.selectedOptions[0].dataset.precio||''">
           {% for b in disponibles %}
-          <option value="{{ b.id }}" data-precio="{{ b.precio }}">{{ b.titulo }}{% if b.autor %} — {{ b.autor }}{% endif %} ({{ precio_o_consultar(b) }})</option>
+          <option value="{{ b.id }}" data-precio="{{ b.precio }}">{{ b.titulo }}{% if b.autor %} — {{ b.autor }}{% endif %} ({{ precio_o_consultar(b) }}{% if b.ejemplares > 1 %} · {{ b.ejemplares }} ej.{% endif %})</option>
           {% endfor %}
         </select>
       </label>

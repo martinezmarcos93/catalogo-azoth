@@ -2,7 +2,7 @@
 
 Catálogo de libros, vitrina online, ventas, turnos de tatuaje y calculadora
 de costos para Azoth (librería esotérica y salón de tatuajes de Silvio
-Abadía, Bolívar 1447, San Telmo). Pensado para que lo use una sola persona
+Abadía — "Silvio Caveira" en redes —, Bolívar 1447, San Telmo). Pensado para que lo use una sola persona
 (Silvio) desde la PC del local y desde el celular.
 
 ## Stack
@@ -48,6 +48,29 @@ celular no carga la página aunque esté en el mismo WiFi:
 1. Panel de control → Firewall de Windows Defender → Configuración avanzada.
 2. Reglas de entrada → Nueva regla → Puerto → TCP 5000 → Permitir la conexión.
 
+## Tests
+
+```bash
+.venv\Scripts\python.exe -m unittest discover -s tests -t . -v
+```
+
+(En Linux/macOS: `.venv/bin/python -m unittest discover -s tests -t . -v`.)
+Usan una base temporal: no tocan `instance/azoth.db`.
+
+## Ejemplares (stock) y ventas
+
+- Cada libro tiene **Ejemplares en stock** (por defecto 1). Cada venta
+  descuenta uno; si no quedan ejemplares, la venta no se registra.
+- Al vender el **último** ejemplar el libro pasa a VENDIDO, sale de la
+  Vitrina y queda el aviso pendiente de marcar VENDIDO en el post.
+  Si se repone (editar el libro y subir los ejemplares) vuelve a la Vitrina.
+- **Un libro con ventas no se puede borrar**: las ventas son el registro
+  histórico. El botón Eliminar solo aparece en libros que nunca se vendieron.
+- Eliminar una venta es **anularla** (para corregir una carga por error):
+  el ejemplar vuelve al estante.
+- Las bases creadas antes de esta función se actualizan solas al arrancar:
+  los libros vendidos quedan con 0 ejemplares y el resto con 1.
+
 ## Datos
 
 Todo vive en `instance/azoth.db` (SQLite, no se sube al repositorio). Para
@@ -60,7 +83,9 @@ Desde **Catálogo → Importar planilla**:
 1. Descargar la plantilla (`.xlsx`, con listas desplegables para Tapa,
    Tema, Tipo, Estado e Ilustrado, para que no se pueda escribir un valor
    que el sistema no reconozca).
-2. Completar un libro por fila y borrar las 2 filas de ejemplo.
+2. Completar un libro por fila y borrar las 2 filas de ejemplo. La última
+   columna, **Ejemplares**, es cuántas copias hay (vacía = 1); las planillas
+   viejas sin esa columna se siguen pudiendo importar.
 3. Subir el archivo: cada fila con título se agrega como libro nuevo
    (no reemplaza lo que ya estaba cargado, así que importar la misma
    planilla dos veces duplica los libros).
@@ -75,6 +100,11 @@ Desde **Configuración** se puede cargar más de una cuenta de Instagram
 (por ejemplo, una para la librería y otra para tatuajes), cada una con su
 etiqueta. La primera de la lista es la que usan la Vitrina y el botón
 "Consultar por Instagram" de cada libro.
+
+Vienen precargadas las cuentas reales (`app/basedatos.py`): @azothlibreria
+(librería, la de la Vitrina), @solarestudioba (tatuajes) y @silviocaveira,
+más el WhatsApp +54 9 11 3786-9154. Se pueden cambiar o borrar desde
+Configuración; si se borran todas, no vuelven a aparecer solas.
 
 ## Qué significa "contraseña configurable"
 
@@ -111,7 +141,7 @@ app/
   basedatos.py        capa de datos (sqlite3 directo, verbos en español)
   rutas.py            todas las vistas: panel, catálogo, vitrina, ventas, turnos, calculadora, configuración
   utilidades.py        formato de moneda/fecha, glifos y tonos por tema, texto de posts de Instagram
-  schema.sql          esquema de la base
+  schema.sql          esquema de la base (las migraciones de bases viejas están en basedatos._migrar)
   templates/           Jinja2 (una plantilla por pantalla + _macros.html + _form_libro.html)
   static/
     css/               el sistema de diseño (7 archivos: tokens, tipografía, superficies, navegación, controles, datos, ornamentación)
@@ -119,6 +149,8 @@ app/
     icons/             íconos de la PWA, generados a partir del logo
     plantillas/        azoth-catalogo-plantilla.xlsx, para la carga por lote
     manifest.json, sw.js
+tests/
+  test_app.py         tests de punta a punta (unittest, sin dependencias extra)
 scripts/
   generar_plantilla_catalogo.py   regenera la plantilla de Excel si cambian las columnas
 instance/              azoth.db (no versionado) + clave secreta de sesión (no versionada)
@@ -127,5 +159,6 @@ legado/                 el artefacto HTML de un solo archivo de la versión ante
 
 ## Próximos pasos posibles
 
-- Cloudflare Tunnel si se necesita acceso fuera del WiFi del local.
+- Cloudflare Tunnel si se necesita acceso fuera del WiFi del local
+  (antes, cerrar la redirección abierta del login: hoy acepta `siguiente=//otro-sitio`).
 - Hacer configurable el horario que usa el cálculo de "abierto ahora".

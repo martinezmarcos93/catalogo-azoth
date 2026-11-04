@@ -22,17 +22,17 @@ COLUMNAS = [
     ("Título", 32), ("Autor", 22), ("Editorial", 22), ("Año", 8),
     ("País", 14), ("Tapa", 20), ("Páginas", 10), ("Tema", 16),
     ("Tipo", 18), ("Estado", 34), ("Precio", 12), ("Ilustrado", 11),
-    ("Detalle del ejemplar", 36),
+    ("Detalle del ejemplar", 36), ("Ejemplares", 12),
 ]
 SI_NO = ["Sí", "No"]
 
 EJEMPLOS = [
     ["(EJEMPLO) El libro de los esplendores", "Éliphas Lévi", "Editorial Kier",
      1961, "Argentina", "Tapa blanda", 220, "Cábala", "Descatalogado",
-     ESTADOS[2], 70000, "No", "1ra edición — borrar esta fila antes de importar"],
+     ESTADOS[2], 70000, "No", "1ra edición — borrar esta fila antes de importar", 2],
     ["(EJEMPLO) Azoth", "Silvio", "Obra propia", 2026, "Argentina",
      "Tapa blanda", "", "Obra original", "Obra original", "Original firmado",
-     0, "Sí", "Tinta y pluma sobre papel de 180 g — borrar esta fila antes de importar"],
+     0, "Sí", "Tinta y pluma sobre papel de 180 g — borrar esta fila antes de importar", 1],
 ]
 
 FILAS_CON_VALIDACION = 400  # alcanza y sobra para cargar el catálogo entero
@@ -45,11 +45,12 @@ FUENTE = "Arial"
 hoja.sheet_view.showGridLines = False
 
 # --- Banner de instrucciones ---
-hoja.merge_cells("A1:M1")
+hoja.merge_cells("A1:N1")
 banner = hoja["A1"]
 banner.value = (
     "Completá una fila por libro. Las columnas marcadas con ▾ tienen una lista para elegir: "
     "así no se puede escribir un tema o tipo que el sistema no reconozca. "
+    "Ejemplares: cuántas copias hay de ese libro (si se deja vacío, cuenta 1). "
     "Borrá las 2 filas de ejemplo (3 y 4) antes de guardar y subir el archivo."
 )
 banner.font = Font(name=FUENTE, size=10, italic=True, color="672E37")
@@ -109,6 +110,7 @@ for fila in range(primera_fila_datos, ultima_fila_datos + 1):
     hoja.cell(row=fila, column=4).number_format = "0"   # Año
     hoja.cell(row=fila, column=7).number_format = "0"   # Páginas
     hoja.cell(row=fila, column=11).number_format = "#,##0"  # Precio
+    hoja.cell(row=fila, column=14).number_format = "0"   # Ejemplares
 
 destino = Path(__file__).resolve().parent.parent / "app" / "static" / "plantillas" / "azoth-catalogo-plantilla.xlsx"
 destino.parent.mkdir(parents=True, exist_ok=True)
