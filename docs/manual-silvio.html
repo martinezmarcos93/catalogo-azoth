@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Azoth · Manual de uso</title>
+<style>
+  @page { size: A4; margin: 16mm 15mm; }
+  :root { --tinta:#1b1c20; --suave:#5b5e66; --linea:#d4d0c8; --acento:#7a5c2e; --fondo:#f6f3ec; }
+  * { box-sizing: border-box; }
+  body { font-family: "IBM Plex Sans", "Segoe UI", Arial, sans-serif; color: var(--tinta); font-size: 10.5pt; line-height: 1.45; margin: 0; background: #fff; }
+  h1 { font-family: Georgia, "Cormorant Garamond", serif; font-size: 24pt; margin: 0 0 2mm; letter-spacing: .5px; }
+  h2 { font-family: Georgia, serif; font-size: 14pt; margin: 6mm 0 2mm; padding-bottom: 1mm; border-bottom: 1.5px solid var(--acento); color: var(--acento); break-after: avoid; }
+  h3 { font-size: 10.5pt; margin: 3mm 0 1mm; break-after: avoid; }
+  p { margin: 1mm 0 2mm; }
+  .sub { color: var(--suave); margin-bottom: 5mm; }
+  ol, ul { margin: 1mm 0 2mm; padding-left: 6mm; }
+  li { margin: .6mm 0; }
+  b.boton { display: inline-block; border: 1px solid var(--tinta); border-radius: 3px; padding: 0 1.5mm; font-weight: 600; font-size: 9.5pt; white-space: nowrap; }
+  .caja { border: 1px solid var(--linea); background: var(--fondo); border-radius: 4px; padding: 3mm 4mm; margin: 2mm 0 3mm; break-inside: avoid; }
+  .caja.aviso { border-color: var(--acento); }
+  .dir { font-family: "IBM Plex Mono", Consolas, monospace; font-size: 11pt; font-weight: 600; }
+  .escribir { display: inline-block; min-width: 55mm; border-bottom: 1px solid var(--tinta); }
+  table { border-collapse: collapse; width: 100%; margin: 2mm 0; }
+  th, td { border: 1px solid var(--linea); padding: 1.5mm 2mm; text-align: left; vertical-align: top; }
+  th { background: var(--fondo); font-weight: 600; }
+  .dos { display: grid; grid-template-columns: 1fr 1fr; gap: 5mm; }
+  .bloque { break-inside: avoid; }
+  .salto { break-before: page; }
+  .hoja th, .hoja td { font-size: 8pt; padding: 1mm 1.2mm; }
+  .hoja td { height: 9.5mm; }
+  .pie { color: var(--suave); font-size: 8.5pt; margin-top: 4mm; }
+  @media screen { body { max-width: 190mm; margin: 10mm auto; padding: 0 8mm; } }
+</style>
+</head>
+<body>
+
+<h1>Azoth · Manual de uso</h1>
+<p class="sub">Sistema de gestión de la librería y el estudio: catálogo, ventas, turnos de tatuaje y calculadora de costos.</p>
+
+<h2>1. Lo esencial</h2>
+<div class="caja aviso">
+  <p><b>Todo vive en la PC del local.</b> Los libros, las ventas y los turnos se guardan solo en esa PC, no en internet. El celular es otra ventana para ver y cargar lo mismo: lo que cargás en uno aparece al instante en el otro.</p>
+  <p><b>Para que ande, la PC tiene que estar prendida y la ventana negra «Azoth» abierta</b> (se puede minimizar, no cerrar). Arranca sola al prender la PC.</p>
+</div>
+
+<div class="dos">
+  <div class="bloque">
+    <h3>Entrar desde la PC</h3>
+    <p>Abrir el navegador y entrar desde Favoritos o escribiendo:</p>
+    <p class="dir">http://localhost:5000</p>
+  </div>
+  <div class="bloque">
+    <h3>Entrar desde el celular</h3>
+    <p>Conectado al <b>WiFi del local</b> (con datos móviles no anda). Tocar el ícono de Azoth en la pantalla del celular o abrir Chrome en:</p>
+    <p class="dir">http://<span class="escribir">&nbsp;</span>:5000</p>
+  </div>
+</div>
+<p>La contraseña la elegiste vos el primer día. Anotala en un lugar seguro: <b>no se puede ver</b>, solo cambiar.</p>
+
+<h2>2. Las pantallas</h2>
+<table>
+  <tr><th style="width:30%">Pantalla</th><th>Para qué sirve</th></tr>
+  <tr><td><b>Panel</b></td><td>Resumen del mes: lo vendido, libros disponibles, próximos turnos y avisos para revisar (libros sin precio, posts que hay que marcar VENDIDO).</td></tr>
+  <tr><td><b>Catálogo</b></td><td>Todos los libros: cargar, editar, buscar, foto de portada, PDF y el texto listo para el post de Instagram.</td></tr>
+  <tr><td><b>Vitrina online</b></td><td>Los libros disponibles con foto y precio, lindos para mostrarle a un cliente en el celular o la PC.</td></tr>
+  <tr><td><b>Ventas</b></td><td>Registrar una venta (descuenta el ejemplar solo) y ver cuánto se vendió, qué temas y cómo pagan.</td></tr>
+  <tr><td><b>Turnos de tatuaje</b></td><td>La semana del estudio: turnos, señas cobradas y saldo a cobrar.</td></tr>
+  <tr><td><b>Calculadora de costos</b></td><td>Cuánto te costó y cuánta ganancia querés: te dice a cuánto venderlo.</td></tr>
+  <tr><td><b>Configuración</b></td><td>Cambiar la contraseña, el WhatsApp, la dirección, el horario y las cuentas de Instagram.</td></tr>
+</table>
+
+<h2>3. Tareas de todos los días</h2>
+
+<div class="bloque">
+<h3>Cargar un libro</h3>
+<ol>
+  <li><b>Catálogo</b> → <b class="boton">Cargar libro</b>.</li>
+  <li>Completar título, autor, editorial, tema, tipo, estado y <b>precio</b> (se puede escribir con centavos).</li>
+  <li><b>Ejemplares en stock:</b> cuántas copias iguales tenés. Si tenés 3 del mismo, poné 3 (no lo cargues tres veces).</li>
+  <li>Opcional: foto de portada (sacala con el celular) y PDF.</li>
+  <li><b class="boton">Guardar</b>. Si ya existía uno igual, el sistema avisa.</li>
+</ol>
+</div>
+
+<div class="bloque">
+<h3>Publicar un libro en Instagram</h3>
+<ol>
+  <li><b>Catálogo</b> → en el libro, botón <b class="boton">Post</b> → <b class="boton">Copiar texto</b>.</li>
+  <li>Pegarlo en Instagram junto con la foto.</li>
+</ol>
+</div>
+
+<div class="bloque">
+<h3>Registrar una venta</h3>
+<ol>
+  <li><b>Ventas</b> → <b class="boton">Registrar venta</b>.</li>
+  <li>Elegir el libro (el precio se completa solo; se puede cambiar si hiciste descuento), cómo pagó y si es en el local o envío.</li>
+  <li><b class="boton">Registrar</b>. El ejemplar se descuenta solo.</li>
+  <li>Si era el último, en el <b>Panel</b> aparece el aviso para marcar <b>VENDIDO</b> en el post de Instagram. Cuando lo hagas, tocá <b class="boton">Listo</b>.</li>
+</ol>
+<p><b>¿Te equivocaste?</b> En la lista de ventas, el tachito anula la venta y el libro vuelve al estante.</p>
+</div>
+
+<div class="bloque">
+<h3>Agendar un turno de tatuaje</h3>
+<ol>
+  <li><b>Turnos de tatuaje</b> → <b class="boton">Nuevo turno</b>.</li>
+  <li>Fecha, hora, cliente, diseño, sesión (por ejemplo «1 de 3»), precio total y seña.</li>
+  <li><b class="boton">Agendar</b>. Para cambiarlo o borrarlo, el lápiz al lado del turno.</li>
+</ol>
+</div>
+
+<div class="bloque">
+<h3>Reponer stock de un libro</h3>
+<p><b>Catálogo</b> → lápiz del libro → cambiar <b>Ejemplares en stock</b> → <b class="boton">Guardar</b>. Si estaba vendido, vuelve a aparecer en la vitrina.</p>
+</div>
+
+<div class="bloque">
+<h3>Cargar muchos libros juntos (planilla Excel)</h3>
+<ol>
+  <li><b>Catálogo</b> → <b class="boton">Importar planilla</b> → <b class="boton">Descargar plantilla (.xlsx)</b>.</li>
+  <li>Completar un libro por fila (las columnas con flechita tienen lista para elegir). El precio se puede escribir como <i>15.000</i> o <i>$15.000</i>.</li>
+  <li>Guardar y subirla en la misma pantalla. Las filas de ejemplo y los libros que ya estaban cargados se saltean solos: <b>subirla dos veces no duplica nada</b>.</li>
+</ol>
+</div>
+
+<h2>4. Cuidar los datos: el backup</h2>
+<div class="caja aviso">
+  <p><b>Una vez por semana</b>, doble clic en <b>backup-azoth</b> (en <span class="dir">C:\Azoth\scripts\windows</span>). Se puede hacer con el sistema abierto. Guarda una copia con fecha en <i>Documentos\Backups-Azoth</i>.</p>
+  <p><b>Una vez por mes</b>, copiar esa carpeta a un <b>pendrive</b> y guardarlo fuera de la PC. Si la PC se rompe o se la roban, el backup del pendrive es lo único que salva los datos.</p>
+</div>
+
+<h2>5. Si algo no anda</h2>
+<table>
+  <tr><th style="width:38%">Qué pasa</th><th>Qué hacer</th></tr>
+  <tr><td>No carga en ningún lado</td><td>¿Está prendida la PC? ¿Está la ventana negra «Azoth»? Si no, doble clic en <b>iniciar-azoth</b> (en <span class="dir">C:\Azoth\scripts\windows</span>).</td></tr>
+  <tr><td>En la PC anda, en el celular no</td><td>Revisar que el celular esté en el <b>WiFi del local</b>. Si sigue sin andar, la dirección pudo cambiar: mirar la nueva en la ventana negra («Desde el celular: …»).</td></tr>
+  <tr><td>«Contraseña incorrecta»</td><td>Revisar mayúsculas. Después de 5 intentos fallidos hay que <b>esperar 5 minutos</b>.</td></tr>
+  <tr><td>Me olvidé la contraseña</td><td>En la PC: doble clic en <b>resetear-clave</b> (misma carpeta) y elegir una nueva (mínimo 8 caracteres). No se pierde ningún dato.</td></tr>
+  <tr><td>Cerré la ventana negra sin querer</td><td>Doble clic en <b>iniciar-azoth</b>. No se pierde nada.</td></tr>
+  <tr><td>Cualquier otra cosa</td><td>Sacarle una foto a la pantalla (y a la ventana negra) y mandársela a Marcos.</td></tr>
+</table>
+<p class="pie">Contacto técnico: Marcos · <span class="escribir">&nbsp;</span></p>
+
+<!-- Hoja para el relevamiento a mano -->
+<section class="salto hoja">
+  <h2 style="margin-top:0">Hoja para anotar libros (después se pasa a la planilla)</h2>
+  <p style="font-size:8.5pt">Una fila por libro. Tema: Alquimia, Hermetismo, Cábala, Magia, Grimorios, Thelema, Tarot, Astrología, Teosofía, Masonería, Antroposofía, Espiritismo, Demonología, Mitología, Obra original. Tipo: Nuevo, Nuevo de depósito, Usado, Descatalogado, Antigüedad, Obra original. Estado: E = excelente · B = sin roturas ni escritos · S = subrayado en lápiz · D = con detalles (anotar en Detalle) · F = original firmado.</p>
+  <table>
+    <tr><th style="width:22%">Título</th><th style="width:13%">Autor</th><th style="width:11%">Editorial</th><th style="width:5%">Año</th><th style="width:5%">Págs.</th><th style="width:10%">Tema</th><th style="width:8%">Tipo</th><th style="width:4%">Est.</th><th style="width:8%">Precio</th><th style="width:4%">Cant.</th><th>Detalle</th></tr>
+    <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+    <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+    <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+    <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+    <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+    <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+    <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+    <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+    <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+    <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+    <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+    <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+    <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+    <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+    <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+    <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+    <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+    <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+    <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+    <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+    <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+    <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+  </table>
+</section>
+
+</body>
+</html>

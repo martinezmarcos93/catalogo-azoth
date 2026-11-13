@@ -37,7 +37,7 @@ de minutos; al final dice "Listo".
 2. Si Windows pregunta por el **Firewall**: tildar **Redes privadas** y
    "Permitir acceso". (Si no pregunta y el celular no conecta, ver
    "Problemas" abajo.)
-3. Abrir el navegador en la PC: `http://localhost:5000`.
+3. Abrir el navegador en la PC: `http://localhost:5000` y **guardarlo en Favoritos** (el manual de Silvio dice que entra desde ahí).
 4. Aparece **Primer ingreso**: que Silvio elija su contraseña (mínimo 8
    caracteres). No hay forma de recuperarla si se
    olvida sin tocar la base, así que conviene que la anote en un lugar seguro.

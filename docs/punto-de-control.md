@@ -5,9 +5,9 @@ centavos, planilla "$15.000", detalles menores, `resetear_clave`, seguridad
 del login, importación sin ejemplos ni repetidos, toast con todos los
 avisos. 51 tests OK.
 
-**Próximo paso:** commit; manual de uso para Silvio; sábado: instalar con
-`docs/instalacion-windows.md` (`.bat` sin probar en Windows real) y cargar
-el catálogo con la planilla.
+**Próximo paso:** sábado: instalar con `docs/instalacion-windows.md`
+(`.bat` sin probar en Windows real), imprimir `docs/manual-silvio.pdf`
+(3 págs. + hoja para anotar libros), cargar el catálogo con la planilla.
 
 **Bloqueos:** ninguno.
 
