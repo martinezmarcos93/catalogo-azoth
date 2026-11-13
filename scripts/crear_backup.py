@@ -21,8 +21,13 @@ INSTANCE = RAIZ / "instance"
 def crear_backup(destino_base):
     if not (INSTANCE / "azoth.db").exists():
         raise SystemExit(f"No encontré la base en {INSTANCE / 'azoth.db'}: ¿el sistema ya se usó alguna vez?")
-    destino = Path(destino_base) / f"azoth-backup-{datetime.now():%Y-%m-%d_%H%M}"
-    destino.mkdir(parents=True, exist_ok=False)
+    nombre = f"azoth-backup-{datetime.now():%Y-%m-%d_%H%M}"
+    destino = Path(destino_base) / nombre
+    n = 2
+    while destino.exists():  # dos backups en el mismo minuto: -2, -3...
+        destino = Path(destino_base) / f"{nombre}-{n}"
+        n += 1
+    destino.mkdir(parents=True)
 
     origen = sqlite3.connect(INSTANCE / "azoth.db")
     copia = sqlite3.connect(destino / "azoth.db")
