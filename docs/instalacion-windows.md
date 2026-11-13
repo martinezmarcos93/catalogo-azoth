@@ -38,8 +38,8 @@ de minutos; al final dice "Listo".
    "Permitir acceso". (Si no pregunta y el celular no conecta, ver
    "Problemas" abajo.)
 3. Abrir el navegador en la PC: `http://localhost:5000`.
-4. Aparece **Primer ingreso**: que Silvio elija su contraseña (mínimo 4
-   caracteres; mejor algo más largo). No hay forma de recuperarla si se
+4. Aparece **Primer ingreso**: que Silvio elija su contraseña (mínimo 8
+   caracteres). No hay forma de recuperarla si se
    olvida sin tocar la base, así que conviene que la anote en un lugar seguro.
 5. En **Configuración**, revisar el WhatsApp y las cuentas de Instagram
    (vienen cargadas: @azothlibreria, @solarestudioba, @silviocaveira).
@@ -75,6 +75,13 @@ vuelve a hacer el paso 7.
 3. Menú ⋮ → **"Agregar a la pantalla principal"** (o "Instalar app"). Queda
    como un ícono más, con el logo de Azoth. Puede abrirse con la barra del
    navegador visible: es normal en la red local.
+
+### Fuera del local (no incluido en esta entrega)
+
+Por ahora el celular funciona solo conectado al WiFi del local. Si más
+adelante se quiere usar con datos, la guía está en
+[`acceso-remoto-cloudflare.md`](acceso-remoto-cloudflare.md) (necesita un
+dominio; el gratis de DigitalPlat pide verificar la cuenta con GitHub).
 
 ## 8. Backup
 
@@ -123,4 +130,4 @@ Nunca borrar ni pisar la carpeta `instance\`: ahí están todos los datos.
 | Firewall | Panel de control → Firewall de Windows Defender → Configuración avanzada → Reglas de entrada → Nueva regla → Puerto → TCP 5000 → Permitir → tildar Privado. También revisar que la red WiFi esté como **Privada** (Configuración → Red → propiedades del WiFi). |
 | "No se encontró Python" | Reinstalar Python tildando "Add python.exe to PATH" y reiniciar la PC. |
 | La ventana negra se cierra sola al abrir | Abrirla desde una ventana de comandos (`cd C:\Azoth` y `scripts\windows\iniciar-azoth.bat`) para ver el error, y mandarle una foto a Marcos. |
-| Silvio se olvidó la contraseña | Llamar a Marcos (hay que borrar el usuario de la base; los datos no se pierden). |
+| Silvio se olvidó la contraseña | Doble clic en `scripts\windows\resetear-clave.bat` en la PC del local y escribir una nueva. No se pierde ningún dato. |

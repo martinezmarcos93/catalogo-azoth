@@ -1,24 +1,19 @@
 <!-- PUNTO-DE-CONTROL -->
-**Tarea actual:** main con todo lo del 03-nov: ejemplares por libro, borrado
-protegido, validación de turnos, portada y PDF, arreglos de UI (botón
-Eliminar, portada en el panel), instructivo de instalación en Windows
-(`docs/instalacion-windows.md`) con `.bat` de instalar/iniciar/backup y
-`scripts/crear_backup.py` (backup seguro de instance/). 29 tests OK.
+**Tarea actual (12-nov):** entrega del sábado 14-nov **solo en red local**
+(PC + celular en el WiFi del local). Hecho, sin commitear: importes con
+centavos, planilla "$15.000", detalles menores, `resetear_clave`, seguridad
+del login, importación sin ejemplos ni repetidos, toast con todos los
+avisos. 51 tests OK.
 
-**Próximo paso:** instalar en la PC del local siguiendo
-`docs/instalacion-windows.md`. Los `.bat` no se probaron en Windows real:
-verificarlos ahí.
-
-**Ideas futuras (Marcos, 03-nov):**
-- Que Silvio la use en su Android como una app más, sin APK: ya es PWA →
-  "Agregar a pantalla de inicio" (como Tonus/Ikigai en iPhone). Pantalla
-  completa y uso fuera del WiFi del local → Cloudflare Tunnel (HTTPS).
-- Controlar Spotify desde el sistema (para después; la API pide Premium e internet).
+**Próximo paso:** commit; manual de uso para Silvio; sábado: instalar con
+`docs/instalacion-windows.md` (`.bat` sin probar en Windows real) y cargar
+el catálogo con la planilla.
 
 **Bloqueos:** ninguno.
 
-**Preguntas abiertas:**
-- Vista de celular sin probar. ¿El PDF es solo para Silvio o se vende?
-- Etiquetas de Instagram: confirmar. Achicar fotos (Pillow → dependency-auditor).
-- Login: redirección abierta `siguiente=//...` (cerrar antes de un Tunnel).
+**Postergado:** acceso desde fuera del local (`docs/acceso-remoto-cloudflare.md`):
+falta verificar la cuenta de DigitalPlat con GitHub para registrar
+`azothlibreria.dpdns.org`. Alternativa sin dominio: Tailscale.
+
+**Preguntas abiertas:** vista de celular sin probar; ¿el PDF se vende?
 <!-- /PUNTO-DE-CONTROL -->
