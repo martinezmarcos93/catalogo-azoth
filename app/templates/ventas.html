@@ -73,7 +73,7 @@
       <label>Entrega
         <select name="entrega">{% for e in ENTREGAS %}<option>{{ e }}</option>{% endfor %}</select>
       </label>
-      <label class="full">Precio final ($)<input id="s-precio" name="precio" type="number" min="0" step="500" value="{{ disponibles[0].precio if disponibles else '' }}"></label>
+      <label class="full">Precio final ($)<input id="s-precio" name="precio" type="number" min="0" step="0.01" value="{{ disponibles[0].precio if disponibles else '' }}"></label>
     </div>
     <div class="end"><button class="btn ghost" type="button" onclick="this.closest('dialog').close()">Cancelar</button><button class="btn" type="submit">Registrar</button></div>
   </form>

@@ -25,9 +25,9 @@
       <label for="nombre">Tu nombre</label>
       <input id="nombre" name="nombre" value="Silvio" required>
       <label for="clave">Contraseña</label>
-      <input id="clave" name="clave" type="password" minlength="4" required autocomplete="new-password">
+      <input id="clave" name="clave" type="password" minlength="8" required autocomplete="new-password">
       <label for="clave_repetida">Repetila</label>
-      <input id="clave_repetida" name="clave_repetida" type="password" minlength="4" required autocomplete="new-password">
+      <input id="clave_repetida" name="clave_repetida" type="password" minlength="8" required autocomplete="new-password">
       {% if error %}<p class="field-error">{{ error }}</p>{% endif %}
       <button class="btn" type="submit">Crear contraseña y entrar</button>
     </form>

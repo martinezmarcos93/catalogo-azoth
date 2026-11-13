@@ -16,7 +16,7 @@ from app import create_app
 from app import basedatos as db
 
 RAIZ = Path(__file__).resolve().parent.parent
-CLAVE = "abcd"
+CLAVE = "abcd1234"
 
 
 class BaseTest(unittest.TestCase):
@@ -369,3 +369,205 @@ class TestMigracion(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestImportes(BaseTest):
+    def test_parser_formato_argentino(self):
+        from app.utilidades import importe
+        casos = {"15.000": 15000, "$15.000": 15000, "$ 15.000,50": 15000.5,
+                 "15000,5": 15000.5, "15000.5": 15000.5, "1.250.000": 1250000,
+                 "18500": 18500, 18500.0: 18500, 12.345: 12.35, "": None,
+                 None: None, "consultar": None, "15,000.50": 15000.5}
+        for entrada, esperado in casos.items():
+            self.assertEqual(importe(entrada), esperado, entrada)
+
+    def test_money_con_y_sin_centavos(self):
+        from app.utilidades import money
+        self.assertEqual(money(18500), "$18.500")
+        self.assertEqual(money(18500.5), "$18.500,50")
+        self.assertEqual(money(1250000.25), "$1.250.000,25")
+        self.assertEqual(money(-300), "-$300")
+
+    def test_libro_venta_y_turno_con_centavos(self):
+        libro_id = self.crear_libro(precio="18500.50")
+        self.assertEqual(self.libro(libro_id)["precio"], 18500.5)
+        self.c.post("/ventas/crear", data={"libro_id": libro_id, "precio": "18250.75"})
+        with self.app.app_context():
+            self.assertEqual(db.listar_ventas()[0]["precio"], 18250.75)
+        self.c.post("/turnos/crear", data={"fecha": "2030-01-10", "hora": "15:00",
+                                          "cliente": "Ana", "diseno": "Sello",
+                                          "total": "45500", "sena": "7500.5"})
+        with self.app.app_context():
+            turno = db.listar_turnos()[0]
+        self.assertEqual((turno["total"], turno["sena"]), (45500, 7500.5))
+        html = self.c.get("/ventas").get_data(as_text=True)
+        self.assertIn("$18.250,75", html)
+
+    def test_formularios_sin_paso_fijo_en_importes(self):
+        self.crear_libro()
+        for ruta in ["/catalogo", "/ventas", "/turnos", "/calculadora"]:
+            html = self.c.get(ruta).get_data(as_text=True)
+            for paso in ('step="100"', 'step="500"', 'step="1000"'):
+                self.assertNotIn(paso, html, ruta)
+
+    def test_planilla_con_precios_escritos_como_texto(self):
+        from app.utilidades import fila_planilla_a_libro
+        fila = ["Kybalion"] + [None] * 9
+        for texto, esperado in [("15.000", 15000), ("$15.000", 15000), ("$ 9.999,90", 9999.9)]:
+            self.assertEqual(fila_planilla_a_libro(fila + [texto])["precio"], esperado, texto)
+        paginas = fila_planilla_a_libro(["X", None, None, None, None, None, "1.200"])["paginas"]
+        self.assertEqual(paginas, 1200)
+
+
+class TestDetalles(BaseTest):
+    def test_anular_venta_inexistente_no_dice_anulada(self):
+        html = self.c.post("/ventas/999/eliminar", follow_redirects=True).get_data(as_text=True)
+        self.assertNotIn("Venta anulada", html)
+        self.assertIn("ya no existe", html)
+
+    def test_login_deja_sesion_permanente(self):
+        self.c.post("/logout")
+        r = self.c.post("/login", data={"clave": CLAVE})
+        cookie = r.headers.get("Set-Cookie", "")
+        self.assertIn("Expires=", cookie)
+
+    def _modulo(self, nombre):
+        import importlib.util
+        spec = importlib.util.spec_from_file_location(nombre, RAIZ / f"scripts/{nombre}.py")
+        modulo = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(modulo)
+        return modulo
+
+    def test_dos_backups_en_el_mismo_minuto(self):
+        modulo = self._modulo("crear_backup")
+        instance = Path(self.tmp)
+        (instance / "t.db").rename(instance / "azoth.db")
+        modulo.INSTANCE = instance
+        primero, _ = modulo.crear_backup(instance / "backups")
+        segundo, _ = modulo.crear_backup(instance / "backups")
+        self.assertNotEqual(primero, segundo)
+        self.assertTrue((segundo / "azoth.db").exists())
+
+    def test_resetear_clave_sin_perder_datos(self):
+        libro_id = self.crear_libro()
+        modulo = self._modulo("resetear_clave")
+        self.assertTrue(modulo.resetear_clave(Path(self.tmp) / "t.db", "nueva123"))
+        with self.assertRaises(ValueError):
+            modulo.resetear_clave(Path(self.tmp) / "t.db", "123")
+        self.c.post("/logout")
+        self.assertIn("incorrecta", self.c.post("/login", data={"clave": CLAVE}).get_data(as_text=True))
+        r = self.c.post("/login", data={"clave": "nueva123"})
+        self.assertEqual(r.status_code, 302)
+        self.assertIsNotNone(self.libro(libro_id))
+
+
+class TestSeguridad(BaseTest):
+    def setUp(self):
+        super().setUp()
+        from app import auth
+        auth._intentos.clear()
+        self.c.post("/logout")
+
+    def test_redireccion_abierta_cerrada(self):
+        for malo in ["//evil.com", "/\\evil.com", "https://evil.com", "/\\/evil.com"]:
+            r = self.c.post("/login", data={"clave": CLAVE, "siguiente": malo})
+            self.assertEqual(r.headers["Location"], "/", malo)
+            self.c.post("/logout")
+        r = self.c.post("/login", data={"clave": CLAVE, "siguiente": "/ventas"})
+        self.assertEqual(r.headers["Location"], "/ventas")
+
+    def test_bloqueo_despues_de_5_intentos(self):
+        for _ in range(5):
+            self.assertEqual(self.c.post("/login", data={"clave": "mala"}).status_code, 200)
+        r = self.c.post("/login", data={"clave": CLAVE})  # ni la buena entra mientras dura
+        self.assertEqual(r.status_code, 429)
+        self.assertIn("Demasiados intentos", r.get_data(as_text=True))
+        from app import auth
+        auth._intentos.clear()  # pasado el bloqueo
+        self.assertEqual(self.c.post("/login", data={"clave": CLAVE}).status_code, 302)
+
+    def test_el_bloqueo_es_por_ip_real_detras_del_tunnel(self):
+        for _ in range(5):
+            self.c.post("/login", data={"clave": "mala"}, headers={"CF-Connecting-IP": "1.2.3.4"})
+        r = self.c.post("/login", data={"clave": CLAVE}, headers={"CF-Connecting-IP": "5.6.7.8"})
+        self.assertEqual(r.status_code, 302)
+
+    def test_login_correcto_reinicia_contador(self):
+        for _ in range(4):
+            self.c.post("/login", data={"clave": "mala"})
+        self.c.post("/login", data={"clave": CLAVE})
+        self.c.post("/logout")
+        for _ in range(4):
+            self.c.post("/login", data={"clave": "mala"})
+        self.assertEqual(self.c.post("/login", data={"clave": CLAVE}).status_code, 302)
+
+    def test_clave_nueva_minimo_8(self):
+        self.c.post("/login", data={"clave": CLAVE})
+        html = self.c.post("/configuracion/clave", data={
+            "clave_actual": CLAVE, "clave_nueva": "corta12", "clave_nueva_repetida": "corta12"},
+            follow_redirects=True).get_data(as_text=True)
+        self.assertIn("al menos 8", html)
+
+    def test_cookie_y_encabezados(self):
+        r = self.c.post("/login", data={"clave": CLAVE})
+        cookie = r.headers.get("Set-Cookie", "")
+        self.assertIn("SameSite=Lax", cookie)
+        self.assertIn("HttpOnly", cookie)
+        self.assertEqual(r.headers["X-Frame-Options"], "DENY")
+        self.assertEqual(r.headers["X-Content-Type-Options"], "nosniff")
+
+    def test_clave_vieja_de_4_sigue_entrando(self):
+        from werkzeug.security import generate_password_hash
+        with self.app.app_context():
+            db.actualizar_clave_usuario(generate_password_hash("1234"))
+        self.assertEqual(self.c.post("/login", data={"clave": "1234"}).status_code, 302)
+
+
+class TestRepetidos(TestImportar):
+    BASE = ["Kier", 2000, "Argentina", "Tapa blanda", 100, "Tarot", "Usado",
+            "Sin roturas, ni escritos", 9000, "No", ""]
+
+    def flashes(self):
+        return self.c.get("/catalogo").get_data(as_text=True)
+
+    def test_filas_de_ejemplo_se_saltean(self):
+        wb = load_workbook(RAIZ / "app/static/plantillas/azoth-catalogo-plantilla.xlsx")
+        hoja = wb["Catálogo"]
+        hoja.cell(row=5, column=1, value="Libro real")
+        buf = io.BytesIO(); wb.save(buf); buf.seek(0)
+        r = self.c.post("/catalogo/importar", data={"archivo": (buf, "cat.xlsx")},
+                        content_type="multipart/form-data", follow_redirects=True)
+        with self.app.app_context():
+            titulos = [b["titulo"] for b in db.listar_libros()]
+        self.assertEqual(titulos, ["Libro real"])
+        self.assertIn("2 filas de ejemplo", r.get_data(as_text=True))
+
+    def test_subir_dos_veces_no_duplica(self):
+        filas = [["El Kybalion", "Tres Iniciados"] + self.BASE,
+                 ["Tarot de Marsella", "Jodorowsky"] + self.BASE]
+        self.subir(filas)
+        libros = self.subir(filas)
+        with self.app.app_context():
+            self.assertEqual(len(db.listar_libros()), 2)
+
+    def test_repetido_sin_importar_tildes_ni_mayusculas(self):
+        self.subir([["Cábala práctica", "Fortune"] + self.BASE])
+        self.subir([["  CABALA  practica ", "fortune"] + self.BASE,
+                    ["Cábala práctica", "Fortune", "Otra editorial"] + self.BASE[1:]])
+        with self.app.app_context():
+            self.assertEqual(len(db.listar_libros()), 2)  # otra editorial = otra edición
+
+    def test_repetido_dentro_de_la_misma_planilla(self):
+        self.subir([["Uno", "A"] + self.BASE, ["Uno", "A"] + self.BASE])
+        with self.app.app_context():
+            self.assertEqual(len(db.listar_libros()), 1)
+
+    def test_carga_manual_repetida_avisa_pero_carga(self):
+        self.crear_libro("Kybalion")
+        r = self.c.post("/catalogo/crear", data={
+            "titulo": "kybalion", "tema": "Hermetismo", "tipo": "Usado",
+            "estado": "Sin roturas, ni escritos", "precio": "1", "ejemplares": "1"},
+            follow_redirects=True)
+        self.assertIn("ya había un libro", r.get_data(as_text=True))
+        with self.app.app_context():
+            self.assertEqual(len(db.listar_libros()), 2)

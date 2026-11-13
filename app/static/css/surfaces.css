@@ -38,7 +38,8 @@ dialog::backdrop{background:rgba(8,8,10,.78)}
 .detail{display:grid;grid-template-columns:170px 1fr;gap:var(--sp-5)}
 
 /* Aviso flotante (confirmaciones tras un POST) */
-.toast{position:fixed;bottom:var(--sp-5);left:50%;transform:translateX(-50%);z-index:20;padding:var(--sp-3) var(--sp-4);border-radius:var(--r-1);background:var(--bone);color:var(--text-inverse);box-shadow:0 8px 24px rgba(0,0,0,.4)}
+.toast p{margin:0}.toast p+p{margin-top:var(--sp-2)}
+.toast{max-width:min(92vw,560px);cursor:pointer;position:fixed;bottom:var(--sp-5);left:50%;transform:translateX(-50%);z-index:20;padding:var(--sp-3) var(--sp-4);border-radius:var(--r-1);background:var(--bone);color:var(--text-inverse);box-shadow:0 8px 24px rgba(0,0,0,.4)}
 
 @media (max-width:860px){
   .app{grid-template-columns:minmax(0,1fr)}

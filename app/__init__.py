@@ -32,6 +32,10 @@ def create_app(config_extra=None):
         # Tope de una subida entera (PDF + portada + formulario). Los topes
         # por tipo de archivo están en app/archivos.py.
         MAX_CONTENT_LENGTH=170 * 1024 * 1024,
+        # La cookie de sesión no viaja en formularios enviados desde otros
+        # sitios (protección CSRF) y no la puede leer JavaScript.
+        SESSION_COOKIE_SAMESITE="Lax",
+        SESSION_COOKIE_HTTPONLY=True,
     )
     if config_extra:
         app.config.from_mapping(config_extra)
@@ -60,6 +64,15 @@ def create_app(config_extra=None):
     def archivo_demasiado_grande(e):
         flash("El archivo es demasiado grande (PDF hasta 150 MB, portada hasta 15 MB).")
         return redirect(url_for("rutas.catalogo"))
+
+    @app.after_request
+    def encabezados_de_seguridad(respuesta):
+        # Que ningún otro sitio pueda mostrar el sistema dentro de un marco
+        # (clickjacking) ni el navegador adivine tipos de archivo.
+        respuesta.headers.setdefault("X-Frame-Options", "DENY")
+        respuesta.headers.setdefault("X-Content-Type-Options", "nosniff")
+        respuesta.headers.setdefault("Referrer-Policy", "same-origin")
+        return respuesta
 
     @app.context_processor
     def inyectar_contexto_global():

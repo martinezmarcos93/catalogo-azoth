@@ -18,8 +18,10 @@
 
     <div class="panel frame">
       <h2><i data-lucide="upload"></i>2. Completala y subila de nuevo</h2><hr class="sep">
-      <p class="t-sub">Completá un libro por fila, borrá las dos filas de ejemplo, guardá el archivo y subilo acá.
-      Cada fila con título se agrega como un libro nuevo — no reemplaza el catálogo que ya tenés cargado.</p>
+      <p class="t-sub">Completá un libro por fila, guardá el archivo y subilo acá (las filas de ejemplo se saltean solas).
+      Cada fila se agrega como un libro nuevo — no reemplaza el catálogo que ya tenés cargado.
+      Si un libro ya estaba cargado (mismo título, autor y editorial) no se duplica: se avisa y se saltea,
+      así que subir dos veces la misma planilla no repite nada.</p>
       <form method="post" enctype="multipart/form-data">
         <div class="form">
           <label class="full">Archivo (.xlsx)<input type="file" name="archivo" accept=".xlsx,.xlsm" required></label>

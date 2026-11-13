@@ -1,3 +1,4 @@
+import re
 from datetime import date, datetime
 from zoneinfo import ZoneInfo
 
@@ -69,9 +70,51 @@ def tono(tema):
 
 
 def money(n):
-    n = round(n or 0)
+    """Importe en formato argentino: $18.500 o $18.500,50 (los centavos
+    solo aparecen cuando los hay)."""
+    n = round(n or 0, 2)
     signo = "-" if n < 0 else ""
-    return signo + "$" + f"{abs(n):,}".replace(",", ".")
+    texto = f"{abs(n):,.2f}".replace(",", "_").replace(".", ",").replace("_", ".")
+    if texto.endswith(",00"):
+        texto = texto[:-3]
+    return signo + "$" + texto
+
+
+_MILES_CON_PUNTO = re.compile(r"^\d{1,3}(\.\d{3})+$")
+
+
+def importe(valor):
+    """Convierte lo que escribe una persona (o una celda de Excel) en un
+    importe con hasta dos decimales. Entiende el formato argentino:
+    "$15.000" -> 15000, "15.000,50" -> 15000.5, "15000,5" -> 15000.5, y
+    también "15000.5" (lo que manda un <input type=number>).
+    Devuelve None si no hay un número. Los importes enteros quedan int."""
+    if valor is None or isinstance(valor, bool):
+        return None
+    if isinstance(valor, (int, float)):
+        numero = float(valor)
+    else:
+        texto = str(valor).strip().replace("$", "").replace(" ", "").replace("\u00a0", "")
+        if not texto:
+            return None
+        if "," in texto and "." in texto:
+            # el último separador es el decimal: 15.000,50 o 15,000.50
+            if texto.rfind(",") > texto.rfind("."):
+                texto = texto.replace(".", "").replace(",", ".")
+            else:
+                texto = texto.replace(",", "")
+        elif "," in texto:
+            texto = texto.replace(",", ".")          # coma decimal argentina
+        elif _MILES_CON_PUNTO.match(texto):
+            texto = texto.replace(".", "")           # 15.000 / 1.250.000
+        try:
+            numero = float(texto)
+        except ValueError:
+            return None
+    if numero != numero or numero in (float("inf"), float("-inf")):
+        return None
+    numero = round(numero, 2)
+    return int(numero) if numero == int(numero) else numero
 
 
 def precio_o_consultar(libro):
@@ -142,12 +185,27 @@ def texto_post_instagram(libro):
 
 
 def _entero_o_none(valor):
-    if valor in (None, ""):
-        return None
-    try:
-        return int(float(valor))
-    except (TypeError, ValueError):
-        return None
+    numero = importe(valor)
+    return None if numero is None else int(numero)
+
+
+def clave_libro(titulo, autor="", editorial=""):
+    """Clave para detectar libros repetidos: título + autor + editorial, sin
+    importar mayúsculas, tildes ni espacios de más. Dos ediciones distintas
+    del mismo libro (otra editorial) no cuentan como repetidas."""
+    import unicodedata
+
+    def normal(texto):
+        texto = unicodedata.normalize("NFKD", str(texto or "").casefold())
+        texto = "".join(c for c in texto if not unicodedata.combining(c))
+        return " ".join(texto.split())
+
+    return (normal(titulo), normal(autor), normal(editorial))
+
+
+def es_fila_de_ejemplo(titulo):
+    """Las filas de muestra de la plantilla empiezan con "(EJEMPLO)"."""
+    return str(titulo or "").strip().upper().startswith("(EJEMPLO)")
 
 
 def fila_planilla_a_libro(valores):
@@ -177,7 +235,7 @@ def fila_planilla_a_libro(valores):
         "tema": str(tema or "").strip() or TEMAS[0],
         "tipo": str(tipo or "").strip() or TIPOS[0],
         "estado": str(estado or "").strip() or ESTADOS[0],
-        "precio": max(0, _entero_o_none(precio) or 0),
+        "precio": max(0, importe(precio) or 0),
         "ilustrado": 1 if ilustrado_texto in ("sí", "si", "true", "1") else 0,
         "nota": str(nota or "").strip(),
         "ejemplares": max(0, _entero_o_none(ejemplares) if _entero_o_none(ejemplares) is not None else 1),

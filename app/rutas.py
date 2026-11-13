@@ -9,10 +9,10 @@ from werkzeug.security import check_password_hash, generate_password_hash
 
 from . import archivos
 from . import basedatos as db
-from .auth import verificar_sesion
+from .auth import error_clave_nueva, verificar_sesion
 from .utilidades import (
     DIAS, ENTREGAS, ESTADOS, MEDIOS_PAGO, MESES, TEMAS, TIPOS,
-    fecha_valida, fila_planilla_a_libro, hora_valida, hoy_argentina, money,
+    clave_libro, es_fila_de_ejemplo, fecha_valida, ficha, fila_planilla_a_libro, hora_valida, hoy_argentina, importe, money,
 )
 
 bp = Blueprint("rutas", __name__)
@@ -24,6 +24,11 @@ def _entero(valor, por_defecto=None):
         return int(float(valor))
     except (TypeError, ValueError):
         return por_defecto
+
+
+def _importe(valor):
+    """Importe de un formulario (admite centavos); vacío o inválido = 0."""
+    return max(0, importe(valor) or 0)
 
 
 # ---------- PANEL ----------
@@ -107,7 +112,7 @@ def _datos_libro_de_formulario():
         "tema": request.form.get("tema", TEMAS[0]),
         "tipo": request.form.get("tipo", TIPOS[0]),
         "estado": request.form.get("estado", ESTADOS[0]),
-        "precio": max(0, _entero(request.form.get("precio"), 0)),
+        "precio": _importe(request.form.get("precio")),
         "ilustrado": 1 if request.form.get("ilustrado") else 0,
         "nota": request.form.get("nota", "").strip(),
         "ejemplares": max(0, _entero(request.form.get("ejemplares"), 1)),
@@ -156,10 +161,15 @@ def crear_libro():
     if error:
         flash(f"{error} El libro no se cargó.")
         return redirect(url_for("rutas.catalogo"))
+    repetido = db.obtener_libro_igual(datos["titulo"], datos["autor"], datos["editorial"])
     datos["id"] = f"l{int(time.time() * 1000)}"
     db.crear_libro(datos)
     _aplicar_archivos(datos["id"], None, nuevos)
     flash("Libro cargado: ya aparece en la vitrina.")
+    if repetido:
+        flash(f"Ojo: ya había un libro con el mismo título, autor y editorial "
+              f"({ficha(repetido['nro'])}). Si es otra copia del mismo, conviene "
+              f"borrar este y sumar 1 en «Ejemplares» del original.")
     return redirect(url_for("rutas.catalogo"))
 
 
@@ -268,19 +278,36 @@ def importar_catalogo():
     if fila_encabezado is None:
         fila_encabezado = 1
 
-    importados = 0
+    ya_cargados = {clave_libro(b["titulo"], b["autor"], b["editorial"]) for b in db.listar_libros()}
+    importados, ejemplos, repetidos = 0, 0, []
     for i, fila in enumerate(hoja.iter_rows(min_row=fila_encabezado + 1, values_only=True)):
         datos = fila_planilla_a_libro(fila)
         if datos is None:
             continue
+        if es_fila_de_ejemplo(datos["titulo"]):
+            ejemplos += 1
+            continue
+        clave = clave_libro(datos["titulo"], datos["autor"], datos["editorial"])
+        if clave in ya_cargados:
+            repetidos.append(datos["titulo"])
+            continue
+        ya_cargados.add(clave)
         datos["id"] = f"l{int(time.time() * 1000)}{i}"
         db.crear_libro(datos)
         importados += 1
 
     if importados:
         flash(f"Se importaron {importados} libros al catálogo.")
-    else:
+    elif not repetidos:
         flash("No se encontró ningún libro con título en esa planilla.")
+    if ejemplos:
+        flash(f"Se salteó {ejemplos} fila{'s' if ejemplos != 1 else ''} de ejemplo de la plantilla.")
+    if repetidos:
+        muestra = ", ".join(f"«{t}»" for t in repetidos[:5])
+        resto = f" y {len(repetidos) - 5} más" if len(repetidos) > 5 else ""
+        flash(f"No se importaron {len(repetidos)} libros porque ya estaban cargados "
+              f"(mismo título, autor y editorial): {muestra}{resto}. Si son copias "
+              f"de más, sumalas en «Ejemplares» del libro.")
     return redirect(url_for("rutas.catalogo"))
 
 
@@ -342,7 +369,7 @@ def crear_venta():
     if not db.existe_libro(libro_id):
         flash("Elegí un libro del listado.")
         return redirect(url_for("rutas.ventas"))
-    precio = max(0, _entero(request.form.get("precio"), 0))
+    precio = _importe(request.form.get("precio"))
     venta_id = db.crear_venta(
         hoy_argentina().isoformat(),
         libro_id,
@@ -363,8 +390,10 @@ def crear_venta():
 
 @bp.route("/ventas/<int:venta_id>/eliminar", methods=["POST"])
 def eliminar_venta(venta_id):
-    db.eliminar_venta(venta_id)
-    flash("Venta anulada: el ejemplar volvió al estante.")
+    if db.eliminar_venta(venta_id):
+        flash("Venta anulada: el ejemplar volvió al estante.")
+    else:
+        flash("Esa venta ya no existe (quizás ya estaba anulada).")
     return redirect(url_for("rutas.ventas"))
 
 
@@ -410,14 +439,14 @@ def turnos():
 
 
 def _datos_turno_de_formulario():
-    sena = max(0, _entero(request.form.get("sena"), 0))
+    sena = _importe(request.form.get("sena"))
     return {
         "fecha": request.form.get("fecha", ""),
         "hora": request.form.get("hora", "11:00"),
         "cliente": request.form.get("cliente", "").strip(),
         "diseno": request.form.get("diseno", "").strip(),
         "sesion": request.form.get("sesion", "1 de 1").strip() or "1 de 1",
-        "total": max(0, _entero(request.form.get("total"), 0)),
+        "total": _importe(request.form.get("total")),
         "sena": sena,
         "estado": request.form.get("estado") or ("Falta seña" if sena == 0 else "Confirmado"),
     }
@@ -474,9 +503,9 @@ def calculadora():
     costo = request.args.get("costo", "")
     margen = request.args.get("margen", "30")
     resultado = None
-    costo_n = _entero(costo)
-    margen_n = _entero(margen)
-    if costo_n is not None and costo_n >= 0 and margen_n is not None:
+    costo_n = importe(costo)
+    margen_n = importe(margen)
+    if costo_n is not None and costo_n >= 0 and margen_n is not None and margen_n >= 0:
         precio_markup = costo_n * (1 + margen_n / 100)
         precio_margen = costo_n / (1 - margen_n / 100) if margen_n < 100 else None
         resultado = {
@@ -505,10 +534,8 @@ def actualizar_clave():
     repetida = request.form.get("clave_nueva_repetida", "")
     if not check_password_hash(usuario["clave_hash"], actual):
         flash("La contraseña actual no es correcta.")
-    elif len(nueva) < 4:
-        flash("La contraseña nueva tiene que tener al menos 4 caracteres.")
-    elif nueva != repetida:
-        flash("Las dos contraseñas nuevas no coinciden.")
+    elif error_clave_nueva(nueva, repetida):
+        flash(error_clave_nueva(nueva, repetida))
     else:
         db.actualizar_clave_usuario(generate_password_hash(nueva))
         flash("Contraseña actualizada.")

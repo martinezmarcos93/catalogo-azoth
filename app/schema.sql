@@ -25,7 +25,7 @@ CREATE TABLE IF NOT EXISTS libros (
   tema TEXT NOT NULL,
   tipo TEXT NOT NULL,
   estado TEXT NOT NULL,
-  precio INTEGER NOT NULL DEFAULT 0,
+  precio REAL NOT NULL DEFAULT 0,   -- admite centavos
   ilustrado INTEGER NOT NULL DEFAULT 0,
   nota TEXT DEFAULT '',
   -- ejemplares = stock que queda en el estante. vendido = 1 cuando llega a 0.
@@ -42,7 +42,7 @@ CREATE TABLE IF NOT EXISTS ventas (
   libro_id TEXT NOT NULL REFERENCES libros(id),
   medio TEXT NOT NULL,
   entrega TEXT NOT NULL,
-  precio INTEGER NOT NULL
+  precio REAL NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS turnos (
@@ -53,8 +53,8 @@ CREATE TABLE IF NOT EXISTS turnos (
   cliente TEXT NOT NULL,
   diseno TEXT NOT NULL,
   sesion TEXT DEFAULT '1 de 1',
-  total INTEGER NOT NULL DEFAULT 0,
-  sena INTEGER NOT NULL DEFAULT 0,
+  total REAL NOT NULL DEFAULT 0,
+  sena REAL NOT NULL DEFAULT 0,
   estado TEXT NOT NULL DEFAULT 'Confirmado'
 );
 

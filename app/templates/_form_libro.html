@@ -28,7 +28,7 @@
       {% for e in ESTADOS %}<option {{ 'selected' if libro and libro.estado==e or (not libro and loop.first) }}>{{ e }}</option>{% endfor %}
     </select>
   </label>
-  <label>Precio ($)<input name="precio" type="number" min="0" step="1000" value="{{ libro.precio if libro else '' }}" required></label>
+  <label>Precio ($)<input name="precio" type="number" min="0" step="0.01" value="{{ libro.precio if libro else '' }}" required></label>
   <label>Ejemplares en stock<input name="ejemplares" type="number" min="0" step="1" value="{{ libro.ejemplares if libro else 1 }}" required></label>
   <label class="check"><input name="ilustrado" type="checkbox" {{ 'checked' if libro and libro.ilustrado }}> Ilustrado</label>
   <label class="full">Portada (foto JPG, PNG o WEBP, hasta 15 MB)<input name="portada" type="file" accept="image/jpeg,image/png,image/webp"></label>

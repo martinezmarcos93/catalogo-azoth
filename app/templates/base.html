@@ -79,7 +79,7 @@
 
 {% with mensajes = get_flashed_messages() %}
   {% if mensajes %}
-  <div class="toast" role="status" aria-live="polite">{{ mensajes[0] }}</div>
+  <div class="toast" role="status" aria-live="polite" title="Tocá para cerrar">{% for m in mensajes %}<p>{{ m }}</p>{% endfor %}</div>
   {% endif %}
 {% endwith %}
 
@@ -90,7 +90,12 @@
     navigator.serviceWorker.register("{{ url_for('static', filename='sw.js') }}").catch(function(){});
   }
   var toast = document.querySelector('.toast');
-  if (toast) setTimeout(function(){ toast.remove(); }, 4000);
+  if (toast) {
+    // Más tiempo cuanto más texto (avisos de repetidos, etc.); tocar lo cierra.
+    var espera = Math.min(15000, 4000 + toast.textContent.length * 40);
+    setTimeout(function(){ toast.remove(); }, espera);
+    toast.addEventListener('click', function(){ toast.remove(); });
+  }
 
   function copiarAlPortapapeles(boton){
     var texto = boton.getAttribute('data-copy');

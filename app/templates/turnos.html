@@ -62,8 +62,8 @@
       <label>Cliente<input name="cliente" required></label>
       <label>Sesión<input name="sesion" value="1 de 1"></label>
       <label class="full">Diseño y zona<input name="diseno" placeholder="Ej.: uróboros, antebrazo" required></label>
-      <label>Precio total ($)<input name="total" type="number" min="0" step="1000" required></label>
-      <label>Seña ($)<input name="sena" type="number" min="0" step="1000" value="0"></label>
+      <label>Precio total ($)<input name="total" type="number" min="0" step="0.01" required></label>
+      <label>Seña ($)<input name="sena" type="number" min="0" step="0.01" value="0"></label>
     </div>
     <div class="end"><button class="btn ghost" type="button" onclick="this.closest('dialog').close()">Cancelar</button><button class="btn" type="submit">Agendar</button></div>
   </form>
@@ -79,8 +79,8 @@
       <label>Cliente<input name="cliente" value="{{ t.cliente }}" required></label>
       <label>Sesión<input name="sesion" value="{{ t.sesion }}"></label>
       <label class="full">Diseño y zona<input name="diseno" value="{{ t.diseno }}" required></label>
-      <label>Precio total ($)<input name="total" type="number" min="0" step="1000" value="{{ t.total }}" required></label>
-      <label>Seña ($)<input name="sena" type="number" min="0" step="1000" value="{{ t.sena }}"></label>
+      <label>Precio total ($)<input name="total" type="number" min="0" step="0.01" value="{{ t.total }}" required></label>
+      <label>Seña ($)<input name="sena" type="number" min="0" step="0.01" value="{{ t.sena }}"></label>
       <label class="full">Estado
         <select name="estado">
           {% for e in ["Confirmado","Falta seña","Cobrado"] %}<option {{ 'selected' if t.estado==e }}>{{ e }}</option>{% endfor %}

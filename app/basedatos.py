@@ -205,6 +205,18 @@ def listar_libros(buscar="", tema="", tipo="", disponibilidad=""):
     return [dict(f) for f in db.execute(sql, parametros).fetchall()]
 
 
+def obtener_libro_igual(titulo, autor="", editorial=""):
+    """Un libro ya cargado con el mismo título, autor y editorial (sin
+    importar mayúsculas ni tildes), o None."""
+    from .utilidades import clave_libro
+
+    buscada = clave_libro(titulo, autor, editorial)
+    for libro in listar_libros():
+        if clave_libro(libro["titulo"], libro["autor"], libro["editorial"]) == buscada:
+            return libro
+    return None
+
+
 def siguiente_nro_libro():
     db = obtener_conexion()
     fila = db.execute("SELECT MAX(nro) AS m FROM libros").fetchone()
@@ -363,7 +375,7 @@ def eliminar_venta(venta_id):
     db = obtener_conexion()
     venta = obtener_venta(venta_id)
     if venta is None:
-        return
+        return False
     with db:
         db.execute("DELETE FROM ventas WHERE id = ?", (venta_id,))
         db.execute(
@@ -371,6 +383,7 @@ def eliminar_venta(venta_id):
             (venta["libro_id"],),
         )
         db.execute("DELETE FROM instagram_pendiente WHERE libro_id = ?", (venta["libro_id"],))
+    return True
 
 
 # ---------- turnos ----------

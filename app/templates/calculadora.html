@@ -8,8 +8,8 @@
     <form class="panel frame" method="get">
       <h2><i data-lucide="calculator"></i>Datos</h2><hr class="sep">
       <div class="form">
-        <label class="full">¿Cuánto te costó? ($)<input name="costo" type="number" min="0" step="100" value="{{ costo }}" required autofocus></label>
-        <label class="full">¿Cuánta ganancia querés sacar? (%)<input name="margen" type="number" min="0" max="95" step="1" value="{{ margen }}" required></label>
+        <label class="full">¿Cuánto te costó? ($)<input name="costo" type="number" min="0" step="0.01" value="{{ costo }}" required autofocus></label>
+        <label class="full">¿Cuánta ganancia querés sacar? (%)<input name="margen" type="number" min="0" max="95" step="0.01" value="{{ margen }}" required></label>
       </div>
       <div class="end" style="justify-content:flex-start;margin-top:var(--sp-4)"><button class="btn" type="submit">Calcular</button></div>
       <p class="t-sub" style="margin-top:var(--sp-4)">Sirve igual para un libro (costo de compra) que para un tatuaje (insumos + tu hora de trabajo sumados como "costo").</p>
