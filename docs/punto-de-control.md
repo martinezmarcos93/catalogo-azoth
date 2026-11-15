@@ -1,13 +1,9 @@
 <!-- PUNTO-DE-CONTROL -->
-**Tarea actual (12-nov):** entrega del sábado 14-nov **solo en red local**
-(PC + celular en el WiFi del local). Hecho, sin commitear: importes con
-centavos, planilla "$15.000", detalles menores, `resetear_clave`, seguridad
-del login, importación sin ejemplos ni repetidos, toast con todos los
-avisos. 51 tests OK.
+**Tarea actual (14-nov):** sistema **entregado** a Silvio en red local
+(PC del local + celular en el mismo WiFi). `main` = `e443ef8`, 51 tests OK.
 
-**Próximo paso:** sábado: instalar con `docs/instalacion-windows.md`
-(`.bat` sin probar en Windows real), imprimir `docs/manual-silvio.pdf`
-(3 págs. + hoja para anotar libros), cargar el catálogo con la planilla.
+**Próximo paso:** seguimiento de uso: carga del catálogo con la planilla,
+vista de celular en uso real, feedback de Silvio.
 
 **Bloqueos:** ninguno.
 
@@ -15,5 +11,5 @@ avisos. 51 tests OK.
 falta verificar la cuenta de DigitalPlat con GitHub para registrar
 `azothlibreria.dpdns.org`. Alternativa sin dominio: Tailscale.
 
-**Preguntas abiertas:** vista de celular sin probar; ¿el PDF se vende?
+**Preguntas abiertas:** ¿el PDF se vende?
 <!-- /PUNTO-DE-CONTROL -->
